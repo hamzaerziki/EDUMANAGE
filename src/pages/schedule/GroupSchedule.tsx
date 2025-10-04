@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTranslation } from "@/hooks/useTranslation";
 import { scheduleStore, type ScheduleSession } from "@/lib/scheduleStore";
 import { activityStore } from "@/lib/activityStore";
-import { Calendar, ChevronLeft, Plus, Palette, Download } from "lucide-react";
+import { Calendar, ChevronLeft, Plus, Palette, Download, Trash2 } from "lucide-react";
 import { exportTimetablePdf } from "@/lib/pdfUtils";
 import { useSettings } from "@/hooks/useSettings";
 import { useToast } from "@/hooks/use-toast";
@@ -54,8 +54,7 @@ const GroupSchedule = () => {
   const [subjectOptions, setSubjectOptions] = useState<string[]>([]);
   const [groupId, setGroupId] = useState<number | null>(null);
 
-  // Load teacher list from localStorage (fallback to a small mock list)
-    // Load teacher list from database instead of localStorage fallback
+  // Load teacher list from database instead of localStorage fallback
     useEffect(() => {
       const loadTeachers = async () => {
         try {
@@ -225,7 +224,7 @@ const GroupSchedule = () => {
 
     // Persist to backend if group resolved
     try {
-      if (!groupId) return;
+      if (!groupId) throw new Error("Group ID not resolved");
       // Ensure teacher
       let teacherId: number | null = null;
       if (item.teacher) {
@@ -256,7 +255,12 @@ const GroupSchedule = () => {
       const rest = scheduleStore.getAll().filter(s => s.id !== tempId);
       scheduleStore.bulkSet([...rest, updated]);
       setSessions(scheduleStore.getAll().filter(s => (s.group || '').trim() === groupName));
-    } catch {}
+    } catch (err: any) {
+        toast({ title: t.error, description: err.message, variant: "destructive" });
+        // Rollback local store change
+        scheduleStore.remove(tempId);
+        setSessions(scheduleStore.getAll().filter(s => (s.group || '').trim() === groupName));
+    }
   };
 
   const handleUpdate = async (payload: ScheduleSession) => {
@@ -299,18 +303,26 @@ const GroupSchedule = () => {
         scheduleStore.bulkSet([...rest, { ...payload, id: String(tt.id) }]);
         setSessions(scheduleStore.getAll().filter(s => (s.group || '').trim() === groupName));
       }
-    } catch {}
+    } catch (err: any) {
+        toast({ title: t.error, description: err.message, variant: "destructive" });
+    }
   };
 
   const handleDelete = async (s: ScheduleSession) => {
     if (!confirm(`${t.confirmDelete}: ${s.title}`)) return;
+    const originalSessions = sessions;
     scheduleStore.remove(s.id);
     activityStore.add({ id: `${Date.now()}`, type: 'course_delete', message: `Deleted session: ${s.title}`, timestamp: Date.now() });
     setSessions(scheduleStore.getAll().filter(x => (x.group || '').trim() === groupName));
     // Remove from backend if persisted
     const idNum = Number(s.id);
     if (Number.isFinite(idNum)) {
-      try { await timetableApi.remove(idNum); } catch {}
+      try {
+        await timetableApi.remove(idNum);
+      } catch (err: any) {
+        toast({ title: t.error, description: err.message, variant: "destructive" });
+        setSessions(originalSessions);
+      }
     }
   };
 
@@ -319,7 +331,13 @@ const GroupSchedule = () => {
       if (!groupId) throw new Error('Group not resolved yet');
       const resp = await timetableApi.groupPdf(groupId);
       if (resp?.path) {
-        window.open(`${API_BASE}${resp.path}`, '_blank');
+        const url = `${API_BASE}${resp.path}`;
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `timetable_${groupName}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
         return;
       }
       throw new Error('No PDF path returned');
@@ -411,14 +429,17 @@ const GroupSchedule = () => {
                     {row.cells.map((c) => c.isPause ? (
                       <td key={c.key} className="border text-center font-semibold text-muted-foreground">{pauseLabel}</td>
                     ) : c.title ? (
-                      <td key={c.key} colSpan={c.span} className="border p-2">
+                      <td key={c.key} colSpan={c.span} className={`border p-2 group relative ${c.session?.color}`}>
                         <div className="text-center font-semibold cursor-pointer" onClick={() => c.session && openEdit(c.session)}>
-                          {c.title}
+                          {c.title || 'No Title'}
                         </div>
                         <div className="flex justify-between text-xs text-muted-foreground mt-1">
                           <span>{c.teacher || ''}</span>
                           <span>{c.room || ''}</span>
                         </div>
+                        <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => c.session && handleDelete(c.session)}>
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
                       </td>
                     ) : (
                       <td key={c.key} className="border p-2"></td>

@@ -16,10 +16,14 @@ const CACHE_INVALIDATION_PATTERNS = {
   groups: ['/groups/', '/students/', '/courses/', '/stats/'],
   payments: ['/payments/', '/students/', '/stats/'],
   attendance: ['/attendance/', '/students/', '/stats/'],
-  exams: ['/exams/', '/students/', '/courses/', '/stats/']
+  exams: ['/exams/', '/students/', '/courses/', '/stats/'],
+  events: ['/events/', '/stats/'],
+  timetable: ['/timetable/', '/teachers/', '/courses/'],
+  subjectGrades: ['/grades/', '/subjects/', '/students/', '/stats/'],
+  feedback: ['/feedback/', '/teachers/', '/courses/', '/stats/']
 };
 
-const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000/api/v1';
 const AUTH_TOKEN_KEY = 'authToken';
 const LAST_ACTIVITY_KEY = 'lastActivity';
 const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutes instead of 5 minutes
@@ -171,15 +175,37 @@ export async function apiRequest<T = any>(path: string, opts: RequestInit = {}):
 }
 
 export async function loginBackend(username: string, password: string): Promise<{ access_token: string; token_type?: string; username?: string; }>{
-  const body = new URLSearchParams();
-  body.set('username', username);
-  body.set('password', password);
-  return apiRequest('/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
-  });
+  console.log('Attempting login with:', { username, API_BASE });
+  
+  const formData = new URLSearchParams();
+  formData.append('username', username);
+  formData.append('password', password);
+  
+  try {
+    const response = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json'
+      },
+      body: formData.toString()
+    });
+
+    console.log('Login response status:', response.status);
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      console.error('Login error:', error);
+      throw new Error(error.detail || 'Login failed');
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Login exception:', error);
+    throw error;
+  }
 }
+
 
 export async function registerAdmin(username: string, password: string): Promise<{ access_token: string; username?: string; }>{
   return apiRequest('/auth/register', {

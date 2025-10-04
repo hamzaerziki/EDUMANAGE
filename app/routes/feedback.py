@@ -182,6 +182,11 @@ def get_teacher_stats(
 ):
     """Get aggregated statistics for a teacher"""
     
+    # Check if teacher exists
+    teacher = db.query(Teacher).filter(Teacher.id == teacher_id).first()
+    if not teacher:
+        raise HTTPException(status_code=404, detail=f"Teacher with ID {teacher_id} not found")
+    
     try:
         # Calculate averages
         stats = db.query(
@@ -215,17 +220,11 @@ def get_teacher_stats(
             helpfulness=round(float(stats.avg_helpfulness or 0), 2)
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error getting teacher stats: {e}")
-        return TeacherStats(
-            averageRating=0.0,
-            totalFeedbacks=0,
-            satisfactionScore=0.0,
-            teachingQuality=0.0,
-            courseContent=0.0,
-            communication=0.0,
-            helpfulness=0.0
-        )
+        raise HTTPException(status_code=500, detail=f"Error retrieving teacher statistics: {str(e)}")
 
 
 @router.get("/teacher/{teacher_id}", response_model=List[FeedbackResponse])

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { studentsApi, teachersApi, coursesApi, paymentsApi, attendanceApi } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,13 +35,42 @@ type StatItem = {
   colorClass?: string;
 };
 
+type AnalyticsData = {
+  financial: {
+    monthlyRevenue: number;
+    outstandingAmount: number;
+    projectedAnnualRevenue: number;
+  };
+  attendance: {
+    overallRate: number;
+  };
+};
+
+type Student = {
+  id: number;
+  name: string;
+  status: string;
+};
+
+type Payment = {
+  status: string;
+  date: string;
+  amount: number;
+};
+
+type Attendance = {
+  date: string;
+  student_id: number;
+  status: string;
+};
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { toast } = useToast();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [todaysSessions, setTodaysSessions] = useState<ScheduleSession[]>([]);
   const [topScore, setTopScore] = useState<{
@@ -55,9 +84,8 @@ const AdminDashboard = () => {
   const [lastNotifTs, setLastNotifTs] = useState<number>(0);
   const [leftStudentsCount, setLeftStudentsCount] = useState<number>(0);
   const [stats, setStats] = useState<StatItem[]>([]);
-  const [currentStudents, setCurrentStudents] = useState<any[]>([]);
 
-  const refreshRealtimeBlocks = async () => {
+  const refreshRealtimeBlocks = useCallback(async () => {
     setActivities(activityStore.getRecent(10));
     const now = new Date();
     const day = now.getDay(); // 0 Sun..6 Sat
@@ -69,7 +97,7 @@ const AdminDashboard = () => {
       let best: any = null;
       let bestVal = -Infinity;
       const students = await studentsApi.list();
-      const studentIds = students.map((s: any) => s.id);
+      const studentIds = students.map((s: Student) => s.id);
       for (const g of grids) {
         g.rows?.forEach(r => {
           r.grades?.forEach((val, idx) => {
@@ -88,7 +116,7 @@ const AdminDashboard = () => {
         });
       }
       setTopScore(best);
-    } catch {}
+    } catch (e) { console.error("Error refreshing realtime blocks", e) }
 
     // Check latest notification and show toast if new
     try {
@@ -100,8 +128,8 @@ const AdminDashboard = () => {
           description: latest.message,
         });
       }
-    } catch {}
-  };
+    } catch (e) { console.error("Error showing notification", e)}
+  }, [lastNotifTs, toast]);
 
   useEffect(() => {
     refreshRealtimeBlocks();
@@ -116,7 +144,7 @@ const AdminDashboard = () => {
       window.removeEventListener('storage', onStorage);
       clearInterval(interval);
     };
-  }, []);
+  }, [refreshRealtimeBlocks]);
 
   const relativeTime = (ts: number) => {
     const diff = Date.now() - ts;
@@ -141,24 +169,23 @@ const AdminDashboard = () => {
           paymentsApi.list().catch(() => []),
           attendanceApi.list().catch(() => []),
         ]);
-        setCurrentStudents(students);
         const totalStudents = Array.isArray(students) ? students.length : 0;
         const totalTeachers = Array.isArray(teachers) ? teachers.length : 0;
         const totalCourses = Array.isArray(courses) ? courses.length : 0;
         const now = new Date();
         const ym = now.toISOString().slice(0,7);
-        const monthlyRevenue = (payments || []).filter((p:any)=> String(p.status||'paid')==='paid' && String(p.date||'').startsWith(ym)).reduce((s:number,p:any)=> s + Number(p.amount||0), 0);
-        const outstandingAmount = (payments || []).filter((p:any)=> String(p.status||'paid')!=='paid').reduce((s:number,p:any)=> s + Number(p.amount||0), 0);
+        const monthlyRevenue = (payments || []).filter((p: Payment)=> String(p.status||'paid')==='paid' && String(p.date||'').startsWith(ym)).reduce((s:number,p: Payment)=> s + Number(p.amount||0), 0);
+        const outstandingAmount = (payments || []).filter((p: Payment)=> String(p.status||'paid')!=='paid').reduce((s:number,p: Payment)=> s + Number(p.amount||0), 0);
         const todayISO = now.toISOString().slice(0,10);
-        const todays = (attendance || []).filter((a:any)=> String(a.date)===todayISO);
+        const todays = (attendance || []).filter((a: Attendance)=> String(a.date)===todayISO);
         const seen = new Set<number>();
-        const unique:any[] = [];
+        const unique: Attendance[] = [];
         for (const rec of todays) { const sid = Number(rec.student_id); if (!seen.has(sid)) { seen.add(sid); unique.push(rec); } }
         const present = unique.filter(r=> r.status==='present').length;
         const absent = unique.filter(r=> r.status==='absent').length;
         const denom = present + absent; // ignore late in rate
         const attendanceRate = denom ? Math.round((present/denom)*1000)/10 : 0;
-        const leftCount = (students||[]).filter((s:any)=> ['inactive','left'].includes(String(s.status||'').toLowerCase())).length;
+        const leftCount = (students||[]).filter((s: Student)=> ['inactive','left'].includes(String(s.status||'').toLowerCase())).length;
         setLeftStudentsCount(leftCount);
         setAnalyticsData({ financial: { monthlyRevenue, outstandingAmount, projectedAnnualRevenue: monthlyRevenue*12 }, attendance: { overallRate: attendanceRate } });
         setStats([
@@ -169,7 +196,7 @@ const AdminDashboard = () => {
           { title: t.attendanceRate, value: `${attendanceRate.toFixed(1)}%`, icon: BarChart3, colorClass: "text-sky-600" },
           { title: t.outstandingAmount, value: `${outstandingAmount.toLocaleString()} MAD`, icon: AlertTriangle, colorClass: "text-rose-600" },
         ]);
-      } catch {}
+      } catch (e) { console.error("Error loading KPIs", e) }
     };
     load();
     const interval = setInterval(load, 300000);
@@ -184,7 +211,7 @@ const AdminDashboard = () => {
   ] as ActivityItem[];
   const allowedActivityTypes = new Set(['exam_created','exam_updated','student_added','student_deleted','teacher_deleted','note_changed','payment','enrollment']);
   const recentActivities = (activities.length ? activities : fallbackActivities)
-    .filter((a: any) => !a.type || allowedActivityTypes.has(a.type));
+    .filter((a: ActivityItem) => !a.type || allowedActivityTypes.has(a.type));
 
   const fallbackSessions = [
     { subject: 'Mathematics', teacher: 'Dr. Smith', time: '09:00', students: 24 },
@@ -317,9 +344,9 @@ const AdminDashboard = () => {
                 <div key={index} className="flex items-start gap-3 p-3 rounded-md border">
                   <div className="h-2 w-2 rounded-full bg-muted-foreground mt-2"></div>
                   <div className="flex-1">
-                    <p className="text-sm">{(activity as any).message}</p>
+                    <p className="text-sm">{activity.message}</p>
                     <p className="text-xs text-muted-foreground">
-                      {(activity as any).timestamp ? relativeTime((activity as any).timestamp) : (activity as any).time}
+                      {activity.timestamp ? relativeTime(activity.timestamp) : (activity as any).time}
                     </p>
                   </div>
                 </div>

@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 
 from ..database import get_db
-from ..models.models import Course
+from ..models.models import Course, Group, Student
 from ..schemas import CourseCreate, CourseRead, CourseUpdate
 from ..utils.auth import get_current_admin
 
@@ -24,18 +24,25 @@ def create_course(payload: CourseCreate, db: Session = Depends(get_db)):
     return obj
 
 
-@router.get("/{course_id}")
-def get_course(course_id: int, db: Session = Depends(get_db), current_admin = Depends(get_current_admin)):
-    course = db.query(Course).filter(Course.id == course_id).first()
+@router.get("/{course_id}", response_model=CourseRead)
+def get_course(course_id: int, db: Session = Depends(get_db)):
+    # Get course with joined relationships
+    course = (
+        db.query(Course)
+        .options(joinedload(Course.group).joinedload(Group.students))
+        .filter(Course.id == course_id)
+        .first()
+    )
+    
     if not course:
-        # Provide helpful error message with available courses
         available_courses = db.query(Course).all()
         available_ids = [c.id for c in available_courses]
         raise HTTPException(
-            status_code=404, 
+            status_code=404,
             detail=f"Course with ID {course_id} not found. Available course IDs: {available_ids}"
         )
-    return course
+
+    return CourseRead.model_validate(course)
 
 
 @router.get("/{course_id}/validate")

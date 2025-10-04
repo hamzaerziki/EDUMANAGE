@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { apiRequest } from '@/lib/apiClient';
 
 export interface InstitutionSettings {
   name: string;
@@ -10,9 +11,8 @@ export interface InstitutionSettings {
   darkMode: boolean;
   fontSize: string;
   autoPrint?: boolean;
-  // Branding
-  logoDataUrl?: string; // base64 PNG or JPEG data URL
-  location?: string;    // City, Country (for header contact block)
+  logoDataUrl?: string;
+  location?: string;
 }
 
 const defaultSettings: InstitutionSettings = {
@@ -25,51 +25,53 @@ const defaultSettings: InstitutionSettings = {
   darkMode: false,
   fontSize: "medium",
   autoPrint: true,
-  logoDataUrl: "", // You can set this from Settings UI (base64 image)
+  logoDataUrl: "",
   location: "Casablanca, Maroc",
 };
 
 export const useSettings = () => {
-  const [institutionSettings, setInstitutionSettings] = useState<InstitutionSettings>(() => {
-    const saved = localStorage.getItem('institution-settings');
-    return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
-  });
+  const [institutionSettings, setInstitutionSettings] = useState<InstitutionSettings>(defaultSettings);
 
-  const updateInstitutionSettings = (updates: Partial<InstitutionSettings>) => {
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await apiRequest<InstitutionSettings>('/settings');
+        setInstitutionSettings(response.data);
+      } catch (error) {
+        console.error("Error fetching institution settings:", error);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
+  const updateInstitutionSettings = async (updates: Partial<InstitutionSettings>) => {
     const newSettings = { ...institutionSettings, ...updates };
     setInstitutionSettings(newSettings);
-    localStorage.setItem('institution-settings', JSON.stringify(newSettings));
     try {
+      await apiRequest<InstitutionSettings>('/settings', {
+        method: 'PUT',
+        body: JSON.stringify(newSettings),
+      });
       window.dispatchEvent(new CustomEvent('institution-settings-changed', { detail: newSettings }));
-    } catch {}
+    } catch (error) {
+      console.error("Error updating institution settings:", error);
+    }
   };
 
   const resetToDefaults = () => {
     setInstitutionSettings(defaultSettings);
-    localStorage.setItem('institution-settings', JSON.stringify(defaultSettings));
-    try {
-      window.dispatchEvent(new CustomEvent('institution-settings-changed', { detail: defaultSettings }));
-    } catch {}
+    updateInstitutionSettings(defaultSettings);
   };
 
-  // Listen for settings updates (same-tab custom event and cross-tab storage event)
   useEffect(() => {
     const onCustom = (e: Event) => {
       const ce = e as CustomEvent<InstitutionSettings>;
       if (ce.detail) setInstitutionSettings(ce.detail);
     };
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'institution-settings' && e.newValue) {
-        try {
-          setInstitutionSettings({ ...defaultSettings, ...JSON.parse(e.newValue) });
-        } catch {}
-      }
-    };
     window.addEventListener('institution-settings-changed', onCustom as EventListener);
-    window.addEventListener('storage', onStorage);
     return () => {
       window.removeEventListener('institution-settings-changed', onCustom as EventListener);
-      window.removeEventListener('storage', onStorage);
     };
   }, []);
 

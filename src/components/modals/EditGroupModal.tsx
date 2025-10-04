@@ -188,36 +188,22 @@ export const EditGroupModal = ({ isOpen, onClose, onEdit, group }: EditGroupModa
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="grade">{t.class}</Label>
-              <Select value={formData.grade} onValueChange={(value) => setFormData({...formData, grade: value, subjects: []})}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t.selectClass} />
-                </SelectTrigger>
-                <SelectContent>
-                  {formData.level && moroccanLevels[formData.level as keyof typeof moroccanLevels]?.grades.map((grade) => (
-                    <SelectItem key={grade.value} value={grade.value}>{grade.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
+          <div class="grid grid-cols-2 gap-4">
             <div>
               <Label>{t.subjects}</Label>
-              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border rounded-md">
+              <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border rounded-md">
                 {availableSubjects.map((s, idx) => {
                   const id = `subj-${idx}`;
                   const checked = formData.subjects.includes(s);
                   return (
-                    <div key={id} className="flex items-center space-x-2">
+                    <div key={id} class="flex items-center space-x-2">
                       <Checkbox id={id} checked={checked} onCheckedChange={(c) => {
                         setFormData(prev => ({
                           ...prev,
                           subjects: (c as boolean) ? [...prev.subjects, s] : prev.subjects.filter(x => x !== s)
                         }));
                       }} />
-                      <Label htmlFor={id} className="text-sm truncate">{s}</Label>
+                      <Label htmlFor={id} class="text-sm truncate">{s}</Label>
                     </div>
                   );
                 })}

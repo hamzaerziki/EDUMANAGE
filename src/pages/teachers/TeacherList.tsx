@@ -67,22 +67,37 @@ const TeacherList = () => {
         if (!alive) return;
         
         // Process teachers data
-        const adapted = Array.isArray(teachersList) ? (teachersList as any[]).map(x => ({
-          id: x.id,
-          name: x.full_name || '',
-          full_name: x.full_name || '',
-          email: x.email || '',
-          phone: x.phone || '',
-          department: x.speciality || '',
-          speciality: x.speciality || '',
-          subjects: x.speciality ? [x.speciality] : [],
-          status: 'active' as const,
-          studentsCount: 0,
-          experience: '',
-          joinDate: (x.created_at ? String(x.created_at).slice(0,10) : ''),
-          created_at: x.created_at,
-          avatar: '',
-        })) : [];
+        // Fetch stats for each teacher to get studentsCount
+        const adapted = Array.isArray(teachersList)
+          ? await Promise.all((teachersList as any[]).map(async x => {
+              let studentsCount = 0;
+              let experience = '';
+              try {
+                const stats = await teachersApi.stats(x.id);
+                studentsCount = stats.students || 0;
+                experience = stats.experience ? `${stats.experience} yrs` : '';
+              } catch (e) {
+                studentsCount = 0;
+                experience = '';
+              }
+              return {
+                id: x.id,
+                name: x.full_name || '',
+                full_name: x.full_name || '',
+                email: x.email || '',
+                phone: x.phone || '',
+                department: x.speciality || '',
+                speciality: x.speciality || '',
+                subjects: x.speciality ? [x.speciality] : [],
+                status: 'active' as const,
+                studentsCount,
+                experience,
+                joinDate: (x.created_at ? String(x.created_at).slice(0,10) : ''),
+                created_at: x.created_at,
+                avatar: '',
+              };
+            }))
+          : [];
         
         console.log('📚 Loaded teachers:', adapted);
         setTeachers(adapted);
@@ -449,7 +464,7 @@ const TeacherList = () => {
           department: tch.speciality || '',
           subjects: tch.speciality ? [tch.speciality] : [],
           status: 'active' as const,
-          studentsCount: 0,
+          studentsCount: 0, // Optionally fetch stats here if needed
           experience: '',
           joinDate: (tch.created_at ? String(tch.created_at).slice(0,10) : ''),
           avatar: '',

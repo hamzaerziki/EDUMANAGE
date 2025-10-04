@@ -8,5 +8,7 @@ reportlab
 matplotlib
 pydantic
 pydantic-settings
+python-dotenv
 email-validator
 python-multipart
+colorama

@@ -10,9 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/hooks/useTranslation";
 import { CreditCard, DollarSign, Calendar, Eye, Printer } from "lucide-react";
-import { getAllCurriculumSubjectsBilingual } from "@/lib/moroccanCurriculum";
-import { getCustomSubjects } from "@/lib/subjectStore";
-import { paymentsApi, groupsApi, studentsApi } from "@/lib/api";
+import { paymentsApi, groupsApi, studentsApi, subjectsApi } from "@/lib/api";
 
 interface RecordPaymentModalProps {
   open: boolean;
@@ -48,25 +46,25 @@ const RecordPaymentModal = ({ open, onOpenChange, initialGroupId, initialStudent
   const [createdPayment, setCreatedPayment] = useState<any | null>(null);
   const [groups, setGroups] = useState<any[]>([]);
   const [allStudents, setAllStudents] = useState<any[]>([]);
-  const allSubjects = Array.from(new Set([
-    ...getAllCurriculumSubjectsBilingual(),
-    ...getCustomSubjects(),
-  ])).sort((a, b) => a.localeCompare(b));
+  const [allSubjects, setAllSubjects] = useState<string[]>([]);
 
-  // Load groups/students from backend
+  // Load groups/students/subjects from backend
   useEffect(() => {
     if (!open) return;
     const load = async () => {
       try {
-        const [g, s] = await Promise.all([
+        const [g, s, sub] = await Promise.all([
           groupsApi.list(),
           studentsApi.list().catch(()=>[]),
+          subjectsApi.list().catch(()=>[]),
         ]);
         setGroups(Array.isArray(g) ? g : []);
         setAllStudents(Array.isArray(s) ? s : []);
+        setAllSubjects(Array.isArray(sub) ? sub.map((s: any) => s.name) : []);
       } catch {
         setGroups([]);
         setAllStudents([]);
+        setAllSubjects([]);
       }
     };
     load();

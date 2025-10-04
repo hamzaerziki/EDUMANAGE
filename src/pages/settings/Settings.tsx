@@ -12,24 +12,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { 
+import { apiRequest } from "@/lib/apiClient";
+import {
+  RefreshCw,
+  Save,
   Settings2,
   User,
-  Bell,
-  Shield,
-  Globe,
-  Palette,
   Database,
-  Mail,
-  Phone,
-  Save,
-  RefreshCw,
+  Shield,
+  Eye,
+  EyeOff,
+  Palette,
   Download,
   Upload,
-  Trash2,
-  Eye,
-  EyeOff
 } from "lucide-react";
+
 
 const Settings = () => {
   const { language, setLanguage, t } = useTranslation();
@@ -69,9 +66,9 @@ const Settings = () => {
     setHasChanges(false);
     toast({
       title: t.success,
-      description: language === 'en' ? "Institution settings have been updated successfully." :
-                  language === 'fr' ? "Les paramètres de l'institution ont été mis à jour avec succès." :
-                  "تم تحديث إعدادات المؤسسة بنجاح.",
+      description: language === 'en' ? "Institution settings have been updated successfully."
+                  : language === 'fr' ? "Les paramètres de l'institution ont été mis à jour avec succès."
+                  : "تم تحديث إعدادات المؤسسة بنجاح.",
     });
   };
 
@@ -81,9 +78,9 @@ const Settings = () => {
     setHasChanges(false);
     toast({
       title: language === 'en' ? "Settings Reset" : language === 'fr' ? "Paramètres réinitialisés" : "تم إعادة تعيين الإعدادات",
-      description: language === 'en' ? "Settings have been restored to default values." :
-                  language === 'fr' ? "Les paramètres ont été restaurés aux valeurs par défaut." :
-                  "تم استعادة الإعدادات إلى القيم الافتراضية.",
+      description: language === 'en' ? "Settings have been restored to default values."
+                  : language === 'fr' ? "Les paramètres ont été restaurés aux valeurs par défaut."
+                  : "تم استعادة الإعدادات إلى القيم الافتراضية.",
     });
   };
   // Handle dark mode toggle
@@ -103,14 +100,25 @@ const Settings = () => {
     root.classList.add(`font-${fontSize}`);
   }, [fontSize]);
 
-  // Mock data for system info
-  const systemInfo = {
+  const [systemInfo, setSystemInfo] = useState({
     version: "1.2.4",
-    lastUpdate: "2024-01-20",
-    totalUsers: 234,
-    storageUsed: 2.4,
-    storageTotal: 10
-  };
+    totalStudents: 0,
+  });
+
+  useEffect(() => {
+    const fetchSystemInfo = async () => {
+      console.log("Fetching system info...");
+      try {
+        const response = await apiRequest("/system-info");
+        console.log("System info response:", response);
+        setSystemInfo(response.data);
+      } catch (error) {
+        console.error("Error fetching system info:", error);
+      }
+    };
+
+    fetchSystemInfo();
+  }, []);
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -144,7 +152,7 @@ const Settings = () => {
       </div>
 
       {/* System Overview Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
         <Card className="hover-scale">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">System Version</CardTitle>
@@ -156,47 +164,15 @@ const Settings = () => {
           </CardContent>
         </Card>
 
-        <Card className="hover-scale">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <User className="h-4 w-4 text-green" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green">{systemInfo.totalUsers}</div>
-            <p className="text-xs text-muted-foreground">Active accounts</p>
-          </CardContent>
-        </Card>
 
-        <Card className="hover-scale">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Storage Used</CardTitle>
-            <Database className="h-4 w-4 text-purple" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple">{systemInfo.storageUsed}GB</div>
-            <p className="text-xs text-muted-foreground">of {systemInfo.storageTotal}GB</p>
-          </CardContent>
-        </Card>
-
-        <Card className="hover-scale">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Last Update</CardTitle>
-            <RefreshCw className="h-4 w-4 text-orange" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange">{systemInfo.lastUpdate}</div>
-            <p className="text-xs text-muted-foreground">System updated</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Settings Tabs */}
       <Tabs defaultValue="general" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="general">{t.general}</TabsTrigger>
           <TabsTrigger value="security">{t.security}</TabsTrigger>
           <TabsTrigger value="appearance">{t.appearance}</TabsTrigger>
-          <TabsTrigger value="system">{t.system}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-4">
@@ -450,65 +426,20 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="system" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5" />
-                {t.systemManagement}
+                <Upload className="h-5 w-5" />
+                Institution Logo
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <p className="font-medium">{t.dataManagement}</p>
-                  <div className="flex gap-3">
-                    <Button variant="outline">
-                      <Download className="h-4 w-4 mr-2" />
-                      {t.exportData}
-                    </Button>
-                    <Button variant="outline">
-                      <Upload className="h-4 w-4 mr-2" />
-                      {t.importData}
-                    </Button>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-3">
-                  <p className="font-medium">{t.systemMaintenance}</p>
-                  <div className="flex gap-3">
-                    <Button variant="outline">
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      {t.clearCache}
-                    </Button>
-                    <Button variant="outline">
-                      <Database className="h-4 w-4 mr-2" />
-                      {t.optimizeDatabase}
-                    </Button>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-3">
-                  <p className="font-medium text-destructive">{t.dangerZone}</p>
-                  <div className="p-4 border border-destructive/20 rounded-lg bg-destructive/5">
-                    <div className="space-y-3">
-                      <div>
-                        <p className="font-medium text-destructive">{t.resetSystemSettings}</p>
-                        <p className="text-sm text-muted-foreground">{t.thisWillResetAllSettingsToDefaults}</p>
-                      </div>
-                      <Button variant="destructive" size="sm">
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        {t.resetSettings}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">Upload or update the institution’s logo.</p>
+                <Button variant="outline">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload
+                </Button>
               </div>
             </CardContent>
           </Card>

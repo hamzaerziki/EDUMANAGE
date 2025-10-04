@@ -42,40 +42,37 @@ const ManageInscriptions = () => {
     const loadData = async () => {
       try {
         setPageLoading(true);
-        
-        const [courseData, courseMeta, studentsData, groupsData] = await Promise.all([
-          coursesApi.get(parseInt(id)),
-          coursesApi.getMeta(parseInt(id)).catch((err) => {
-            console.warn('Failed to load course metadata:', err);
-            return {};
-          }),
-          studentsApi.list().catch((err) => {
-            console.warn('Failed to load students:', err);
-            // Don't show error toast for auth errors as redirect will handle it
-            if (!err.message?.includes('Unauthorized') && !err.message?.includes('Session expired')) {
-              return [];
-            }
-            return [];
-          }),
-          groupsApi.list().catch((err) => {
-            console.warn('Failed to load groups:', err);
-            // Don't show error toast for auth errors as redirect will handle it
-            if (!err.message?.includes('Unauthorized') && !err.message?.includes('Session expired')) {
-              return [];
-            }
-            return [];
-          }),
-        ]);
-        
-        // Merge course data with metadata
-        const fullCourseData = { ...courseData, ...courseMeta };
-        setCourse(fullCourseData);
-        setStudents(Array.isArray(studentsData) ? studentsData : []);
-        setGroups(Array.isArray(groupsData) ? groupsData : []);
-        
+        console.log('Loading course data for ID:', id);
+
+        // Load course data first
+        const courseData = await coursesApi.get(parseInt(id));
+        console.log('Received course data:', courseData);
+
+        if (!courseData) {
+          throw new Error('Course data not found');
+        }
+
+        // Get all available groups
+        const groupsList = await groupsApi.list().catch(err => {
+          console.warn('Failed to load groups:', err);
+          return [];
+        });
+        console.log('Available groups:', groupsList);
+
+        // Get all available students
+        const studentsList = await studentsApi.list().catch(err => {
+          console.warn('Failed to load students:', err);
+          return [];
+        });
+        console.log('Available students:', studentsList);
+
+        // Set state with loaded data
+        setCourse(courseData);
+        setStudents(Array.isArray(studentsList) ? studentsList : []);
+        setGroups(Array.isArray(groupsList) ? groupsList : []);
+
       } catch (error: any) {
         console.error('Error loading data:', error);
-        // Don't show error toast for auth errors as redirect will handle it
         if (!error.message?.includes('Unauthorized') && !error.message?.includes('Session expired')) {
           toast({
             title: "Erreur",

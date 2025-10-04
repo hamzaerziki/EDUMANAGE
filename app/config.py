@@ -1,48 +1,80 @@
 import os
+import secrets
 from pydantic_settings import BaseSettings
-from pydantic import Field
 from typing import List
-
+from pydantic import computed_field
 
 class Settings(BaseSettings):
+    # Environment
+    ENVIRONMENT: str = "development"
+    DEBUG: bool = False
+    
     # Database
-    DATABASE_URL: str = Field(
-        default=os.getenv(
-            "DATABASE_URL",
-            "postgresql+psycopg2://postgres:postgres@localhost:5432/edumanage",
-        )
-    )
-
-    # Auth / JWT
-    JWT_SECRET: str = Field(default=os.getenv("JWT_SECRET", "change_me"))
-    JWT_ALGORITHM: str = Field(default="HS256")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440")))
-
-    # Admin bootstrap
-    ADMIN_USERNAME: str = Field(default=os.getenv("ADMIN_USERNAME", "admin"))
-    ADMIN_PASSWORD: str = Field(default=os.getenv("ADMIN_PASSWORD", "admin123"))
-
+    DATABASE_URL: str
+    
+    # Security
+    JWT_SECRET: str | None = None
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    
+    # Rate limiting
+    RATE_LIMIT_PER_SECOND: int = 10
+    
+    # Admin bootstrap - only used for initial setup
+    ADMIN_USERNAME: str | None = None
+    ADMIN_PASSWORD: str | None = None
+    
     # CORS
-    BACKEND_CORS_ORIGINS: List[str] = Field(default_factory=lambda: [
+    BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:8080",
         "http://127.0.0.1:8080",
-    ])
+    ]
 
-    # Storage
-    STORAGE_DIR: str = Field(default=os.getenv("STORAGE_DIR", "storage"))
-    RECEIPTS_DIR: str = Field(default=os.getenv("RECEIPTS_DIR", os.path.join("storage", "receipts")))
-    REPORTS_DIR: str = Field(default=os.getenv("REPORTS_DIR", os.path.join("storage", "reports")))
-    DOCUMENTS_DIR: str = Field(default=os.getenv("DOCUMENTS_DIR", os.path.join("storage", "documents")))
+    # Storage base
+    STORAGE_DIR: str = "storage"
+    
+    @computed_field
+    @property
+    def RECEIPTS_DIR(self) -> str:
+        return os.path.join(self.STORAGE_DIR, "receipts")
+    
+    @computed_field
+    @property
+    def REPORTS_DIR(self) -> str:
+        return os.path.join(self.STORAGE_DIR, "reports")
+    
+    @computed_field
+    @property
+    def DOCUMENTS_DIR(self) -> str:
+        return os.path.join(self.STORAGE_DIR, "documents")
+    
+    def get_jwt_secret(self) -> str:
+        if not self.JWT_SECRET:
+            if self.ENVIRONMENT == "production":
+                raise ValueError("JWT_SECRET must be set in production")
+            return secrets.token_urlsafe(32)
+        return self.JWT_SECRET
+    
+    def get_admin_credentials(self) -> tuple[str, str]:
+        username = self.ADMIN_USERNAME or "admin"
+        password = self.ADMIN_PASSWORD or "admin123"
+        if self.ENVIRONMENT == "production" and (not self.ADMIN_USERNAME or not self.ADMIN_PASSWORD):
+            raise ValueError("Admin credentials must be set in production")
+        return username, password
+    
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "extra": "allow"
+    }
 
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
 
-
+# Create settings instance
 settings = Settings()
 
 # Ensure storage directories exist

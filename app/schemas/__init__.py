@@ -100,11 +100,23 @@ class TeacherRead(TeacherBase):
 
 class CourseBase(BaseModel):
     name: str
+    description: Optional[str] = None
+    category: Optional[str] = None
     teacher_id: Optional[int] = None
     group_id: Optional[int] = None
+    max_students: Optional[int] = None
+    fee: Optional[float] = None
+    duration: Optional[str] = None
+    schedule: Optional[str] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    status: Optional[str] = None
+    level: Optional[str] = None
+    prerequisites: Optional[str] = None
+    objectives: Optional[str] = None
 
 class CourseCreate(CourseBase):
-    name: str
+    pass
 
 class CourseUpdate(BaseModel):
     name: Optional[str] = None
@@ -113,6 +125,8 @@ class CourseUpdate(BaseModel):
 
 class CourseRead(CourseBase):
     id: int
+    group: Optional[GroupRead] = None
+    students: Optional[List[StudentRead]] = None
     model_config = {"from_attributes": True}
 
 

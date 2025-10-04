@@ -559,17 +559,7 @@ export async function exportTimetablePdf(opts: {
   const footerRight = `${dateStr} - ${now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
   doc.text(footerRight, pageWidth - margin, footerY, { align: 'right' });
 
-  // Add school stamp/logo area (optional)
-  const stampX = pageWidth - 60;
-  const stampY = 40;
-  doc.setDrawColor(...colors.border);
-  doc.setLineWidth(0.3);
-  doc.rect(stampX, stampY, 45, 30);
-  
-  doc.setTextColor(...colors.textLight);
-  doc.setFontSize(8);
-  doc.text('Cachet de', stampX + 22.5, stampY + 10, { align: 'center' });
-  doc.text("l'établissement", stampX + 22.5, stampY + 18, { align: 'center' });
+
 
   // Save with professional filename
   const filename = `emploi_du_temps_${clean(groupName).replace(/\s+/g, '_')}_${now.toISOString().split('T')[0]}.pdf`;

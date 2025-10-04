@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
+from fastapi.responses import FileResponse
 
 from ..database import get_db
 from ..models.models import Timetable, Group, Course, Teacher
 from ..schemas import TimetableCreate, TimetableRead, TimetableUpdate
 from ..utils.auth import get_current_admin
+from ..utils.pdf_generator import generate_group_timetable_pdf
 
 router = APIRouter(prefix="/timetable", tags=["timetable"], dependencies=[Depends(get_current_admin)])
 
@@ -27,6 +29,35 @@ def get_group_timetable(group_id: int, db: Session = Depends(get_db)):
     return db.query(Timetable).filter(
         Timetable.group_id == group_id
     ).order_by(Timetable.day_of_week, Timetable.start_time).all()
+
+
+@router.get("/group/{group_id}/pdf")
+def get_group_timetable_pdf_route(group_id: int, db: Session = Depends(get_db)):
+    """Generate and return a PDF timetable for a specific group"""
+    group = db.get(Group, group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    timetable_entries = db.query(Timetable).filter(
+        Timetable.group_id == group_id
+    ).order_by(Timetable.day_of_week, Timetable.start_time).all()
+
+    rows = []
+    for entry in timetable_entries:
+        course_name = ""
+        if entry.course_id:
+            course = db.get(Course, entry.course_id)
+            if course:
+                course_name = course.name
+        rows.append({
+            "day": entry.day_of_week,
+            "start": entry.start_time.strftime("%H:%M"),
+            "end": entry.end_time.strftime("%H:%M"),
+            "course": course_name,
+        })
+
+    pdf_path = generate_group_timetable_pdf(group.name, rows)
+    return FileResponse(pdf_path, media_type='application/pdf', filename=f"timetable_{group.name}.pdf")
 
 
 @router.post("/", response_model=TimetableRead)

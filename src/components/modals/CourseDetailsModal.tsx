@@ -91,16 +91,27 @@ const CourseDetailsModal = ({ open, onOpenChange, course }: CourseDetailsModalPr
             </CardContent>
           </Card>
 
-          {/* Schedule */}
+          {/* Course Details */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Schedule
+                <Clock className="h-5 w-5" />
+                {t('course_details')}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-lg">{course.schedule || 'Not scheduled'}</p>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <p className="font-medium">{t('start_date')}</p>
+                <p>{course.start_date || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="font-medium">{t('end_date')}</p>
+                <p>{course.end_date || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="font-medium">{t('fee')}</p>
+                <p>{course.fee ? `${course.fee}` : 'N/A'}</p>
+              </div>
             </CardContent>
           </Card>
         </div>

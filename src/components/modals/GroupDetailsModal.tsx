@@ -64,14 +64,11 @@ export const GroupDetailsModal = ({ isOpen, onClose, group }: GroupDetailsModalP
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between gap-3">
-            <DialogTitle className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5" />
+          <div class="flex items-center justify-between gap-3">
+            <DialogTitle class="flex items-center gap-2">
+              <GraduationCap class="h-5 w-5" />
               {t.groupDetails} - {group.name}
             </DialogTitle>
-            <Button variant="outline" onClick={downloadSchedulePDF} className="shrink-0">
-              <Download className="h-4 w-4 mr-2" />{t.downloadSchedule || "Télécharger l'emploi du temps"}
-            </Button>
           </div>
         </DialogHeader>
         

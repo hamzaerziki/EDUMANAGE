@@ -926,6 +926,7 @@ export const translations: Record<Language, Translation> = {
     courseInformation: 'Course Information',
     teachingInformation: 'Teaching Information',
     durationAndPricing: 'Duration & Pricing',
+    course_details: 'Course Details',
     // Extra course UI labels
     instructor: 'Instructor',
     enrollment: 'Enrollment',
@@ -1602,6 +1603,7 @@ export const translations: Record<Language, Translation> = {
     courseInformation: 'Informations du Cours',
     teachingInformation: 'Informations d\'Enseignement',
     durationAndPricing: 'Durée et Tarification',
+    course_details: 'Détails du Cours',
     // Extra course UI labels
     instructor: 'Enseignant',
     enrollment: 'Inscriptions',

@@ -143,7 +143,10 @@ const AddStudentModal = ({ open, onOpenChange, onCreated, defaultGroupId }: AddS
         enrolledCourses: []
       });
     } catch (err: any) {
-      const msg = (err?.message || 'Failed to add student').slice(0, 300);
+      let msg = (err?.message || 'Failed to add student').slice(0, 300);
+      if (msg.includes('duplicate key value violates unique constraint')) {
+        msg = t.emailExistsError || 'A student with this email already exists.';
+      }
       toast({ title: t.error, description: msg, variant: 'destructive' });
     } finally {
       setLoading(false);

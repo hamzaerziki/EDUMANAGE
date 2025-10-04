@@ -312,3 +312,19 @@ class TeacherStatistics(Base):
     
     # Relationships
     teacher = relationship("Teacher", back_populates="statistics")
+
+
+class InstitutionSettings(Base):
+    __tablename__ = "institution_settings"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    address = Column(Text, nullable=True)
+    phone = Column(String(30), nullable=True)
+    email = Column(String(120), nullable=True)
+    timeZone = Column(String(50), nullable=True)
+    language = Column(String(10), nullable=True)
+    darkMode = Column(Boolean, default=False)
+    fontSize = Column(String(10), default="medium")
+    autoPrint = Column(Boolean, default=True)
+    logoDataUrl = Column(Text, nullable=True)
+    location = Column(String(100), nullable=True)
