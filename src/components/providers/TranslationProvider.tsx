@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { TranslationContext } from '@/hooks/useTranslation';
 import { Language, getTranslation } from '@/lib/translations';
+import { useTranslation } from 'react-i18next';
 
 interface TranslationProviderProps {
   children: React.ReactNode;
 }
 
 export const TranslationProvider: React.FC<TranslationProviderProps> = ({ children }) => {
+  const { i18n } = useTranslation();
   const [language, setLanguage] = useState<Language>(() => {
     const saved = localStorage.getItem('app-language');
     return (saved as Language) || 'fr';
@@ -14,6 +16,7 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({ childr
 
   useEffect(() => {
     localStorage.setItem('app-language', language);
+    i18n.changeLanguage(language);
     
     // Keep app LTR always; only change language attribute and font for Arabic
     document.dir = 'ltr';
@@ -27,7 +30,7 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({ childr
     // Notify listeners
     const event = new CustomEvent('languageChanged', { detail: { language } });
     window.dispatchEvent(event);
-  }, [language]);
+  }, [language, i18n]);
 
   const value = {
     language,

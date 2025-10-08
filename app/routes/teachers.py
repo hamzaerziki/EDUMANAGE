@@ -5,10 +5,11 @@ from datetime import datetime, timedelta
 from sqlalchemy import func
 
 from ..database import get_db
-from ..models.models import Teacher, Student, Group, Course, Attendance, StudentGrade, Feedback
+from ..models.models import Teacher, Student, Group, Course, Attendance, StudentGrade, Feedback, Admin
 from ..schemas import TeacherCreate, TeacherRead, TeacherUpdate, TeacherStats, TeacherGroupInfo
 from ..utils.auth import get_current_admin
 from ..services.teacher_stats_service import TeacherStatsService
+from ..services.usage import UsageService
 
 router = APIRouter(prefix="/teachers", tags=["teachers"], dependencies=[Depends(get_current_admin)])
 
@@ -19,11 +20,26 @@ def list_teachers(db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=TeacherRead)
-def create_teacher(payload: TeacherCreate, db: Session = Depends(get_db)):
+async def create_teacher(
+    payload: TeacherCreate,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(get_current_admin)
+):
+    # Check if creating a new teacher is allowed under current subscription
+    from ..services.usage import UsageService
+    if not await UsageService.check_limit(db, admin.id, "teachers"):
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot create new teacher: Would exceed subscription limit"
+        )
+
     obj = Teacher(**payload.dict())
     db.add(obj)
     db.commit()
     db.refresh(obj)
+
+    # Track the usage
+    await UsageService.track_usage(db, admin.id, "teachers")
     return obj
 
 

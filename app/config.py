@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     ADMIN_USERNAME: str | None = None
     ADMIN_PASSWORD: str | None = None
     
+    # Stripe Configuration
+    STRIPE_SECRET_KEY: str | None = None
+    STRIPE_PUBLISHABLE_KEY: str | None = None
+    STRIPE_WEBHOOK_SECRET: str | None = None
+    
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
@@ -37,6 +42,11 @@ class Settings(BaseSettings):
 
     # Storage base
     STORAGE_DIR: str = "storage"
+    
+    # Stripe Configuration
+    STRIPE_SECRET_KEY: str | None = None
+    STRIPE_PUBLISHABLE_KEY: str | None = None
+    STRIPE_WEBHOOK_SECRET: str | None = None
     
     @computed_field
     @property
@@ -66,6 +76,16 @@ class Settings(BaseSettings):
         if self.ENVIRONMENT == "production" and (not self.ADMIN_USERNAME or not self.ADMIN_PASSWORD):
             raise ValueError("Admin credentials must be set in production")
         return username, password
+    
+    def get_stripe_keys(self) -> tuple[str, str, str]:
+        if self.ENVIRONMENT == "production":
+            if not all([self.STRIPE_SECRET_KEY, self.STRIPE_PUBLISHABLE_KEY, self.STRIPE_WEBHOOK_SECRET]):
+                raise ValueError("Stripe configuration must be set in production")
+        return (
+            self.STRIPE_SECRET_KEY or "sk_test_your_stripe_secret_key",
+            self.STRIPE_PUBLISHABLE_KEY or "pk_test_your_stripe_publishable_key",
+            self.STRIPE_WEBHOOK_SECRET or "whsec_your_stripe_webhook_secret"
+        )
     
     model_config = {
         "env_file": ".env",

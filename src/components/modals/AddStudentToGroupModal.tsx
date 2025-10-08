@@ -51,7 +51,7 @@ export const AddStudentToGroupModal = ({ isOpen, onClose, onAddStudents, group }
     console.log('🔍 All students:', allStudents.length);
     console.log('🎯 Unassigned students (available for groups):', unassignedStudents.length);
     
-    const term = searchTerm.trim().toLowerCase();
+    const term = (searchTerm || '').trim().toLowerCase();
     const filtered = term
       ? unassignedStudents.filter((s: any) => 
           String(s.full_name || s.name || '').toLowerCase().includes(term) || 

@@ -185,7 +185,10 @@ const AdminDashboard = () => {
         const absent = unique.filter(r=> r.status==='absent').length;
         const denom = present + absent; // ignore late in rate
         const attendanceRate = denom ? Math.round((present/denom)*1000)/10 : 0;
-        const leftCount = (students||[]).filter((s: Student)=> ['inactive','left'].includes(String(s.status||'').toLowerCase())).length;
+        const leftCount = (students||[]).filter((s: Student)=> {
+          const status = String(s.status || '').toLowerCase();
+          return ['inactive','left'].includes(status);
+        }).length;
         setLeftStudentsCount(leftCount);
         setAnalyticsData({ financial: { monthlyRevenue, outstandingAmount, projectedAnnualRevenue: monthlyRevenue*12 }, attendance: { overallRate: attendanceRate } });
         setStats([
@@ -394,7 +397,7 @@ const AdminDashboard = () => {
                     <div className="text-right">
                       <p className="text-sm font-medium">{class_.time}</p>
                       <Badge variant="secondary" className="text-xs">
-                        {class_.students} {t.students.toLowerCase?.() || 'students'}
+                        {class_.students} {(t.students && typeof t.students.toLowerCase === 'function') ? t.students.toLowerCase() : 'students'}
                       </Badge>
                     </div>
                   </div>

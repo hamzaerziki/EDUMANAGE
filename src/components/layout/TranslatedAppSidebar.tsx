@@ -32,71 +32,131 @@ import { useTranslation } from "@/hooks/useTranslation";
 const TranslatedAppSidebar = () => {
   const { language, t } = useTranslation();
 
-  const menuItems = [
-    {
-      title: t.dashboard,
-      url: "/dashboard",
-      icon: Home,
-    },
-    {
-      title: t.students,
-      url: "/students",
-      icon: Users,
-    },
-    {
-      title: t.teachers,
-      url: "/teachers", 
-      icon: UserCheck,
-    },
-    {
-      title: t.courses,
-      url: "/courses",
-      icon: BookOpen,
-    },
-    {
-      title: t.groups,
-      url: "/groups",
-      icon: GraduationCap,
-    },
-    {
-      title: t.subjects,
-      url: "/subjects",
-      icon: Building2,
-    },
-    {
-      title: t.attendance,
-      url: "/attendance",
-      icon: Calendar,
-    },
-    {
-      title: t.schedule,
-      url: "/schedule",
-      icon: CalendarDays,
-    },
-    {
-      title: t.payments,
-      url: "/payments",
-      icon: CreditCard,
-    },
-    {
-      title: t.reports,
-      url: "/reports",
-      icon: FileText,
-    },
-    {
-      title: t.exams || 'Exams',
-      url: "/exams",
-      icon: BarChart3,
-    },
-    {
-      title: t.settings,
-      url: "/settings",
-      icon: Settings,
-    }
-  ];
+  // Direct translation mapping to fix missing sidebar titles
+  const getMenuItems = () => {
+    const translations = {
+      en: {
+        dashboard: 'Dashboard',
+        students: 'Students',
+        teachers: 'Teachers',
+        courses: 'Courses',
+        groups: 'Groups',
+        subjects: 'Subjects',
+        attendance: 'Attendance',
+        schedule: 'Schedule',
+        payments: 'Payments',
+        reports: 'Reports',
+        exams: 'Exams',
+        settings: 'Settings',
+        subscriptions: 'Subscriptions'
+      },
+      fr: {
+        dashboard: 'Tableau de bord',
+        students: 'Étudiants',
+        teachers: 'Enseignants',
+        courses: 'Cours',
+        groups: 'Groupes',
+        subjects: 'Matières',
+        attendance: 'Présence',
+        schedule: 'Horaire',
+        payments: 'Paiements',
+        reports: 'Rapports',
+        exams: 'Examens',
+        settings: 'Paramètres',
+        subscriptions: 'Abonnements'
+      },
+      ar: {
+        dashboard: 'لوحة التحكم',
+        students: 'الطلاب',
+        teachers: 'المعلمون',
+        courses: 'الدورات',
+        groups: 'المجموعات',
+        subjects: 'المواد',
+        attendance: 'الحضور',
+        schedule: 'الجدول',
+        payments: 'المدفوعات',
+        reports: 'التقارير',
+        exams: 'الامتحانات',
+        settings: 'الإعدادات',
+        subscriptions: 'الاشتراكات'
+      }
+    };
+    
+    const currentLang = translations[language] || translations.fr;
+    
+    return [
+      {
+        title: currentLang.dashboard,
+        url: "/dashboard",
+        icon: Home,
+      },
+      {
+        title: currentLang.students,
+        url: "/students",
+        icon: Users,
+      },
+      {
+        title: currentLang.teachers,
+        url: "/teachers", 
+        icon: UserCheck,
+      },
+      {
+        title: currentLang.courses,
+        url: "/courses",
+        icon: BookOpen,
+      },
+      {
+        title: currentLang.groups,
+        url: "/groups",
+        icon: GraduationCap,
+      },
+      {
+        title: currentLang.subjects,
+        url: "/subjects",
+        icon: Building2,
+      },
+      {
+        title: currentLang.attendance,
+        url: "/attendance",
+        icon: Calendar,
+      },
+      {
+        title: currentLang.schedule,
+        url: "/schedule",
+        icon: CalendarDays,
+      },
+      {
+        title: currentLang.payments,
+        url: "/payments",
+        icon: CreditCard,
+      },
+      {
+        title: currentLang.reports,
+        url: "/reports",
+        icon: FileText,
+      },
+      {
+        title: currentLang.exams,
+        url: "/exams",
+        icon: BarChart3,
+      },
+      {
+        title: currentLang.settings,
+        url: "/settings",
+        icon: Settings,
+      },
+      {
+        title: currentLang.subscriptions,
+        url: "/subscriptions",
+        icon: CreditCard,
+      }
+    ];
+  };
+  
+  const menuItems = getMenuItems();
 
   return (
-    <Sidebar className={`border-r bg-sidebar`}>
+    <Sidebar collapsible="none" className="w-64 min-w-64 border-r bg-sidebar flex-shrink-0">
       <SidebarHeader className="border-b p-4">
         <div className="flex items-center gap-3">
           <GraduationCap className="h-5 w-5 text-muted-foreground" />
@@ -113,10 +173,10 @@ const TranslatedAppSidebar = () => {
             <SidebarMenu className="space-y-1">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="rounded-md mb-1 transition-colors hover:bg-accent">
-                    <Link to={item.url} className={`flex items-center gap-3 p-3`}>
-                      <item.icon className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{item.title}</span>
+                  <SidebarMenuButton asChild>
+                    <Link to={item.url} className="flex items-center gap-3 p-3 rounded-md transition-colors hover:bg-accent">
+                      <item.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="text-sm font-medium">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

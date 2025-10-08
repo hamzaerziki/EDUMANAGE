@@ -119,6 +119,7 @@ from .routes.subject_grades import router as subject_grades_router
 from .routes.feedback import router as feedback_router
 from .routes.system import router as system_router
 from .routes.settings import router as settings_router
+from .routes.subscriptions import router as subscriptions_router
 
 # Include all routes with API version prefix
 app.include_router(auth_router)
@@ -138,3 +139,4 @@ app.include_router(subject_grades_router)
 app.include_router(feedback_router)
 app.include_router(system_router)
 app.include_router(settings_router)
+app.include_router(subscriptions_router)

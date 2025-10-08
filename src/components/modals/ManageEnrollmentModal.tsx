@@ -118,12 +118,12 @@ const ManageEnrollmentModal = ({ open, onOpenChange, course }: ManageEnrollmentM
 
   const filteredStudents = selectedAction === "enroll" 
     ? availableStudents.filter(student =>
-        (student.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (student.email || '').toLowerCase().includes(searchTerm.toLowerCase())
+        (student.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+        (student.email || '').toLowerCase().includes((searchTerm || '').toLowerCase())
       )
     : enrolledStudents.filter(student =>
-        (student.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (student.email || '').toLowerCase().includes(searchTerm.toLowerCase())
+        (student.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+        (student.email || '').toLowerCase().includes((searchTerm || '').toLowerCase())
       );
 
   if (!course) return null;

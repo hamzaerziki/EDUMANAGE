@@ -1,33 +1,18 @@
-import { useState, useEffect, useMemo, useRef } from "react";
-import { useTranslation } from "@/hooks/useTranslation";
-import { AnalyticsEngine } from "@/lib/analytics";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { 
-  FileText, 
-  Download, 
-  BarChart3, 
-  TrendingUp,
-  Users,
-  BookOpen,
-  DollarSign,
-  Calendar,
-  Search,
-  Filter,
-  Plus,
-  Eye,
-  Share,
-  RefreshCw
-} from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { Users, BookOpen, DollarSign, Calendar, RefreshCw, TrendingUp, BarChart3, FileText, Search, Filter, Download, Plus } from "lucide-react";
+import { apiClient } from "@/lib/apiClient";
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, BarChart as RechartsBarChart, Bar } from 'recharts';
+import { AnalyticsEngine } from "@/lib/analytics";
 import { useToast } from "@/hooks/use-toast";
 import GenerateReportModal from "@/components/modals/GenerateReportModal";
 import { CSVBulkUploadModal } from "@/components/modals/CSVBulkUploadModal";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { attendanceStore } from "@/lib/attendanceStore";
 import { examsStore } from "@/lib/examsStore";
 import { exportReportPdf } from "@/lib/pdfUtils";
@@ -43,6 +28,35 @@ import {
   generateEnrollmentReportPDF,
   type TeacherData,
 } from "@/lib/reportBuilders";
+
+// Mock data for charts
+const attendanceCorrelationData = [
+  { bucket: '0-20%', avg: 45 },
+  { bucket: '21-40%', avg: 58 },
+  { bucket: '41-60%', avg: 72 },
+  { bucket: '61-80%', avg: 85 },
+  { bucket: '81-100%', avg: 92 }
+];
+
+const classComparisonData = [
+  { group: 'Group A', avg: 78 },
+  { group: 'Group B', avg: 82 },
+  { group: 'Group C', avg: 75 },
+  { group: 'Group D', avg: 88 }
+];
+
+const studentTrendData = [
+  { exam: 'Exam 1', score: 75 },
+  { exam: 'Exam 2', score: 82 },
+  { exam: 'Exam 3', score: 78 },
+  { exam: 'Exam 4', score: 85 }
+];
+
+const analyticsDisplayData = [
+  { title: 'Total Students', value: '450', change: '+5%' },
+  { title: 'Average Attendance', value: '92%', change: '+2%' },
+  { title: 'Course Completion', value: '88%', change: '+3%' }
+];
 
 const ReportList = () => {
   const { toast } = useToast();
@@ -66,13 +80,26 @@ const ReportList = () => {
   const [optIncludeDetails, setOptIncludeDetails] = useState<boolean>(true);
   const [optEnableAdvanced, setOptEnableAdvanced] = useState<boolean>(true);
 
-  // Mock data
-  const reportStats = {
-    totalReports: 42,
-    generatedToday: 8,
-    pendingReports: 3,
-    downloadCount: 156
+  // Dynamic statistics from database
+  const [reportStats, setReportStats] = useState({
+  totalReports: 0,
+  generatedToday: 0,
+  pendingReports: 0,
+  downloadCount: 0
+});
+
+// Load statistics from API
+useEffect(() => {
+  const fetchStatistics = async () => {
+    try {
+      const response = await apiClient.request('/reports/statistics/summary');
+      setReportStats(response.data.reportStats);
+    } catch (error) {
+      console.error("Error fetching report statistics:", error);
+    }
   };
+  fetchStatistics();
+}, []);
 
   const recentReports = [
     {
@@ -128,6 +155,17 @@ const ReportList = () => {
       category: "Attendance"
     },
   ];
+
+  // Filter reports based on search term and type
+  const filteredReports = recentReports.filter(report => {
+    const matchesSearch = report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         report.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = reportType === 'all' || report.type === reportType;
+    return matchesSearch && matchesType;
+  });
+
+  // Get selected group name for performance report
+  const selectedGroupNameForPerf = perfGroup === 'all' ? undefined : perfGroup;
 
   // Refs for charts to embed into PDFs
   const perfStudentTrendRef = useRef<HTMLDivElement | null>(null);
@@ -272,7 +310,7 @@ const ReportList = () => {
   ];
 
   // Initialize analytics data
-  useState(() => {
+  useEffect(() => {
     const mockStudents = [
       { id: 1, name: "Ahmed", gpa: 15.8, attendance: 95, enrollmentDate: "2023-09-01", status: "active", level: "Lycée", grade: "1ère Bac" },
       { id: 2, name: "Fatima", gpa: 16.9, attendance: 92, enrollmentDate: "2022-09-01", status: "active", level: "Lycée", grade: "2ème Bac" },
@@ -297,7 +335,7 @@ const ReportList = () => {
 
     const analytics = AnalyticsEngine.aggregateMetrics(mockStudents, mockCourses, mockPayments, mockAttendance);
     setAnalyticsData(analytics);
-  });
+  }, []);
 
   // Groups and subjects for Performance tab
   const allGroups = useMemo(() => {
@@ -465,14 +503,6 @@ const ReportList = () => {
       default: return "bg-muted text-muted-foreground";
     }
   };
-
-  const filteredReports = recentReports.filter(report => {
-    const matchesSearch = report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         report.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = reportType === "all" || report.type === reportType;
-    
-    return matchesSearch && matchesType;
-  });
 
   const handleRefreshData = async () => {
     setRefreshing(true);

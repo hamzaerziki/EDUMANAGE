@@ -262,9 +262,9 @@ const CourseList = () => {
   };
 
   const filteredCourses = displayCourses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.teacher.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (course.title || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+                         (course.description || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+                         (course.teacher || '').toLowerCase().includes((searchTerm || '').toLowerCase());
     const matchesCategory = categoryFilter === "all" || course.category === categoryFilter;
     const matchesStatus = statusFilter === "all" || course.status === statusFilter;
     return matchesSearch && matchesCategory && matchesStatus;

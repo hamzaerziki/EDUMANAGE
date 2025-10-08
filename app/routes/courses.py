@@ -3,9 +3,10 @@ from sqlalchemy.orm import Session, joinedload
 from typing import List
 
 from ..database import get_db
-from ..models.models import Course, Group, Student
+from ..models.models import Course, Group, Student, Admin
 from ..schemas import CourseCreate, CourseRead, CourseUpdate
 from ..utils.auth import get_current_admin
+from ..services.usage import UsageService
 
 router = APIRouter(prefix="/courses", tags=["courses"], dependencies=[Depends(get_current_admin)])
 
@@ -16,11 +17,26 @@ def list_courses(db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=CourseRead)
-def create_course(payload: CourseCreate, db: Session = Depends(get_db)):
+async def create_course(
+    payload: CourseCreate,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(get_current_admin)
+):
+    # Check if creating a new course is allowed under current subscription
+    from ..services.usage import UsageService
+    if not await UsageService.check_limit(db, admin.id, "courses"):
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot create new course: Would exceed subscription limit"
+        )
+
     obj = Course(**payload.dict())
     db.add(obj)
     db.commit()
     db.refresh(obj)
+
+    # Track the usage
+    await UsageService.track_usage(db, admin.id, "courses")
     return obj
 
 

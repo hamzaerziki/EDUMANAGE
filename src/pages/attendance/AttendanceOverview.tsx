@@ -94,7 +94,7 @@ const AttendanceOverview = () => {
   // Apply filters to groups
   const filteredGroups = groupsData.filter((g) => {
     const classOk = selectedClass === "all" || selectedClass === "" || String(g.id) === String(selectedClass);
-    const q = searchTerm.trim().toLowerCase();
+    const q = (searchTerm || '').trim().toLowerCase();
     const text = `${g.name} ${g.teacher ?? ''} ${g.subject ?? ''} ${g.grade ?? ''}`.toLowerCase();
     const searchOk = q === "" || text.includes(q);
     return classOk && searchOk;
@@ -164,7 +164,7 @@ const AttendanceOverview = () => {
   });
   const filteredRecentAttendance = rowsForDate.filter((record) => {
     const statusOk = studentStatusFilter === 'all' || record.status === studentStatusFilter;
-    const q = studentSearchTerm.trim().toLowerCase();
+    const q = (studentSearchTerm || '').trim().toLowerCase();
     const text = `${record.student} ${record.class}`.toLowerCase();
     const searchOk = q === '' || text.includes(q);
     return statusOk && searchOk;
@@ -713,7 +713,7 @@ const AttendanceOverview = () => {
                           <div className="flex items-center gap-2">
                             <Users className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm text-muted-foreground">
-                              {getStudentCount(group)} {t.students.toLowerCase?.() || 'students'}
+                              {getStudentCount(group)} {(t.students && typeof t.students.toLowerCase === 'function') ? t.students.toLowerCase() : 'students'}
                             </span>
                           </div>
                           

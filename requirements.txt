@@ -12,3 +12,8 @@ python-dotenv
 email-validator
 python-multipart
 colorama
+stripe
+pytest
+pytest-asyncio
+httpx
+pytest-cov

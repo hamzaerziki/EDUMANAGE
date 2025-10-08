@@ -26,6 +26,7 @@ import GroupSchedulePicker from "./pages/schedule/GroupSchedulePicker";
 import GroupSchedule from "./pages/schedule/GroupSchedule";
 import Settings from "./pages/settings/Settings";
 import Exams from "./pages/exams/Exams";
+import { SubscriptionPage } from "./pages/subscriptions/SubscriptionPage";
 import NotFound from "./pages/NotFound";
 import { TranslationProvider } from "./components/providers/TranslationProvider";
 import { AuthProvider } from "./components/providers/AuthProvider";
@@ -72,6 +73,7 @@ const App = () => (
                 <Route path="schedule/group/:groupId" element={<GroupSchedule />} />
                 <Route path="exams" element={<Exams />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="subscriptions" element={<SubscriptionPage />} />
               </Route>
               
               {/* Catch-all route */}

@@ -67,9 +67,9 @@ const EditStudentModal = ({ open, onOpenChange, student, onSave }: EditStudentMo
   ];
 
   const filteredSubjects = useMemo(() => {
-    const q = subjectQuery.trim().toLowerCase();
+    const q = (subjectQuery || '').trim().toLowerCase();
     if (!q) return subjectOptions;
-    return subjectOptions.filter(s => s.toLowerCase().includes(q));
+    return subjectOptions.filter(s => (s || '').toLowerCase().includes(q));
   }, [subjectOptions, subjectQuery]);
 
   useEffect(() => {

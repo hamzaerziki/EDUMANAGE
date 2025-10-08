@@ -278,11 +278,11 @@ const ManageInscriptions = () => {
 
   const filteredStudents = selectedAction === "enroll" 
     ? availableStudents.filter(student =>
-        (student.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (student.full_name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
         (student.email || '').toLowerCase().includes(searchTerm.toLowerCase())
       )
     : enrolledStudents.filter(student =>
-        (student.full_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (student.full_name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
         (student.email || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
 

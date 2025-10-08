@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { translations, Language, Translation } from '@/lib/translations';
+import { Language, Translation } from '@/lib/translations';
 
 interface TranslationContextType {
   language: Language;
@@ -15,8 +15,4 @@ export const useTranslation = () => {
     throw new Error('useTranslation must be used within a TranslationProvider');
   }
   return context;
-};
-
-export const getTranslation = (language: Language): Translation => {
-  return translations[language];
 };

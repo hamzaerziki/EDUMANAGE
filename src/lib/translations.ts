@@ -25,6 +25,35 @@ export interface Translation {
   yes: string;
   no: string;
   confirm: string;
+
+  // Subscription Management
+  subscriptions: string;
+  subscriptionManagement: string;
+  currentPlan: string;
+  upgradePlan: string;
+  billingHistory: string;
+  usageMetrics: string;
+  availablePlans: string;
+  planFeatures: string;
+  monthlyPrice: string;
+  yearlyPrice: string;
+  switchToPlan: string;
+  currentUsage: string;
+  nextBillingDate: string;
+  cancelSubscription: string;
+  resumeSubscription: string;
+  planDetails: string;
+  studentLimit: string;
+  storageLimit: string;
+  supportLevel: string;
+  additionalFeatures: string;
+  billingCycle: string;
+  monthly: string;
+  yearly: string;
+  invoiceHistory: string;
+  downloadInvoice: string;
+  paymentMethod: string;
+  updatePaymentMethod: string;
   downloadSchedule?: string;
   reasonLabel?: string;
   allLabel?: string;
@@ -732,6 +761,35 @@ export const translations: Record<Language, Translation> = {
     create: 'Create',
     update: 'Update',
     remove: 'Remove',
+
+    // Subscription Management
+    subscriptions: 'Subscriptions',
+    subscriptionManagement: 'Subscription Management',
+    currentPlan: 'Current Plan',
+    upgradePlan: 'Upgrade Plan',
+    billingHistory: 'Billing History',
+    usageMetrics: 'Usage Metrics',
+    availablePlans: 'Available Plans',
+    planFeatures: 'Plan Features',
+    monthlyPrice: 'Monthly Price',
+    yearlyPrice: 'Yearly Price',
+    switchToPlan: 'Switch to Plan',
+    currentUsage: 'Current Usage',
+    nextBillingDate: 'Next Billing Date',
+    cancelSubscription: 'Cancel Subscription',
+    resumeSubscription: 'Resume Subscription',
+    planDetails: 'Plan Details',
+    studentLimit: 'Student Limit',
+    storageLimit: 'Storage Limit',
+    supportLevel: 'Support Level',
+    additionalFeatures: 'Additional Features',
+    billingCycle: 'Billing Cycle',
+    monthly: 'Monthly',
+    yearly: 'Yearly',
+    invoiceHistory: 'Invoice History',
+    downloadInvoice: 'Download Invoice',
+    paymentMethod: 'Payment Method',
+    updatePaymentMethod: 'Update Payment Method',
     continue: 'Continue',
     done: 'Done',
     ok: 'OK',
@@ -1409,6 +1467,35 @@ export const translations: Record<Language, Translation> = {
     create: 'Créer',
     update: 'Mettre à jour',
     remove: 'Supprimer',
+
+    // Subscription Management
+    subscriptions: 'Abonnements',
+    subscriptionManagement: 'Gestion des abonnements',
+    currentPlan: 'Plan actuel',
+    upgradePlan: 'Mettre à niveau',
+    billingHistory: 'Historique de facturation',
+    usageMetrics: 'Métriques d\'utilisation',
+    availablePlans: 'Plans disponibles',
+    planFeatures: 'Fonctionnalités du plan',
+    monthlyPrice: 'Prix mensuel',
+    yearlyPrice: 'Prix annuel',
+    switchToPlan: 'Passer au plan',
+    currentUsage: 'Utilisation actuelle',
+    nextBillingDate: 'Prochaine date de facturation',
+    cancelSubscription: 'Annuler l\'abonnement',
+    resumeSubscription: 'Reprendre l\'abonnement',
+    planDetails: 'Détails du plan',
+    studentLimit: 'Limite d\'étudiants',
+    storageLimit: 'Limite de stockage',
+    supportLevel: 'Niveau de support',
+    additionalFeatures: 'Fonctionnalités supplémentaires',
+    billingCycle: 'Cycle de facturation',
+    monthly: 'Mensuel',
+    yearly: 'Annuel',
+    invoiceHistory: 'Historique des factures',
+    downloadInvoice: 'Télécharger la facture',
+    paymentMethod: 'Mode de paiement',
+    updatePaymentMethod: 'Mettre à jour le mode de paiement',
     continue: 'Continuer',
     done: 'Terminé',
     ok: 'OK',
@@ -2049,7 +2136,7 @@ export const translations: Record<Language, Translation> = {
     view: 'عرض',
     add: 'إضافة',
     search: 'بحث',
-    filters: 'فلاتر',
+    filters: 'تصفية',
     export: 'تصدير',
     download: 'تحميل',
     back: 'رجوع',
@@ -2060,6 +2147,35 @@ export const translations: Record<Language, Translation> = {
     create: 'إنشاء',
     update: 'تحديث',
     remove: 'إزالة',
+
+    // Subscription Management
+    subscriptions: 'الاشتراكات',
+    subscriptionManagement: 'إدارة الاشتراكات',
+    currentPlan: 'الخطة الحالية',
+    upgradePlan: 'ترقية الخطة',
+    billingHistory: 'سجل الفواتير',
+    usageMetrics: 'مقاييس الاستخدام',
+    availablePlans: 'الخطط المتاحة',
+    planFeatures: 'مميزات الخطة',
+    monthlyPrice: 'السعر الشهري',
+    yearlyPrice: 'السعر السنوي',
+    switchToPlan: 'التحويل إلى خطة',
+    currentUsage: 'الاستخدام الحالي',
+    nextBillingDate: 'تاريخ الفاتورة القادمة',
+    cancelSubscription: 'إلغاء الاشتراك',
+    resumeSubscription: 'استئناف الاشتراك',
+    planDetails: 'تفاصيل الخطة',
+    studentLimit: 'حد الطلاب',
+    storageLimit: 'حد التخزين',
+    supportLevel: 'مستوى الدعم',
+    additionalFeatures: 'مميزات إضافية',
+    billingCycle: 'دورة الفواتير',
+    monthly: 'شهري',
+    yearly: 'سنوي',
+    invoiceHistory: 'سجل الفواتير',
+    downloadInvoice: 'تحميل الفاتورة',
+    paymentMethod: 'طريقة الدفع',
+    updatePaymentMethod: 'تحديث طريقة الدفع',
     continue: 'متابعة',
     done: 'تم',
     ok: 'موافق',

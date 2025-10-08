@@ -186,7 +186,7 @@ const MarkAttendanceModal = ({ open, onOpenChange, selectedClass, selectedDate }
                     <p className="font-medium">{group.name}</p>
                     <p className="text-sm text-muted-foreground">{group.level || ''}</p>
                   </div>
-                  <Badge variant="outline">{(allStudents||[]).filter((s:any)=> Number(s.group_id)===Number(group.id)).length} {t.students.toLowerCase?.() || 'students'}</Badge>
+                  <Badge variant="outline">{(allStudents||[]).filter((s:any)=> Number(s.group_id)===Number(group.id)).length} {(t.students && typeof t.students.toLowerCase === 'function') ? t.students.toLowerCase() : 'students'}</Badge>
                 </div>
               ))}
             </div>

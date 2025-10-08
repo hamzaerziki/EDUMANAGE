@@ -3,9 +3,11 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from ..database import get_db
-from ..models.models import Student
+from ..models.models import Student, Admin
 from ..schemas import StudentCreate, StudentRead, StudentUpdate
 from ..utils.auth import get_current_admin
+from ..services.usage import UsageService
+from ..services.usage import UsageService
 
 router = APIRouter(prefix="/students", tags=["students"], dependencies=[Depends(get_current_admin)])
 
@@ -16,11 +18,26 @@ def list_students(db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=StudentRead)
-def create_student(payload: StudentCreate, db: Session = Depends(get_db)):
+async def create_student(
+    payload: StudentCreate,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(get_current_admin)
+):
+    # Check if creating a new student is allowed under current subscription
+    from ..services.usage import UsageService
+    if not await UsageService.check_limit(db, admin.id, "students"):
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot create new student: Would exceed subscription limit"
+        )
+
     obj = Student(**payload.dict())
     db.add(obj)
     db.commit()
     db.refresh(obj)
+
+    # Track the usage
+    await UsageService.track_usage(db, admin.id, "students")
     return obj
 
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { apiRequest } from '@/lib/apiClient';
+import { apiClient } from '@/lib/apiClient';
 
 export interface InstitutionSettings {
   name: string;
@@ -35,7 +35,7 @@ export const useSettings = () => {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await apiRequest<InstitutionSettings>('/settings');
+        const response = await apiClient.request<InstitutionSettings>('/settings');
         setInstitutionSettings(response.data);
       } catch (error) {
         console.error("Error fetching institution settings:", error);
@@ -49,7 +49,7 @@ export const useSettings = () => {
     const newSettings = { ...institutionSettings, ...updates };
     setInstitutionSettings(newSettings);
     try {
-      await apiRequest<InstitutionSettings>('/settings', {
+      await apiClient.request<InstitutionSettings>('/settings', {
         method: 'PUT',
         body: JSON.stringify(newSettings),
       });

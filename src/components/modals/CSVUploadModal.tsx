@@ -113,7 +113,7 @@ export const CSVUploadModal = ({ isOpen, onClose, onUploadComplete }: CSVUploadM
       }
       
       if (type === "attendance") {
-        if (!["present", "absent"].includes(row.status?.toLowerCase())) {
+        if (!["present", "absent"].includes((row.status || '').toLowerCase())) {
           errors.push(`Row ${index + 1}: Status must be 'present' or 'absent'`);
         }
         if (!row.date || !/^\d{4}-\d{2}-\d{2}$/.test(row.date)) {

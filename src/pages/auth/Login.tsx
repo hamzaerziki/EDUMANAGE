@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,11 +28,11 @@ const Login = () => {
     const ok = await login(formData.username.trim(), formData.password);
     setLoading(false);
     if (ok) {
-      toast({ title: t.success, description: t.loginSuccess || "Signed in successfully" });
+      toast({ title: t.success || "Success", description: t.loginSuccess || "Signed in successfully" });
       const redirectTo = location?.state?.from?.pathname || "/dashboard";
       navigate(redirectTo, { replace: true });
     } else {
-      toast({ title: t.error, description: t.invalidCredentials || "Invalid username or password", variant: "destructive" });
+      toast({ title: t.error || "Error", description: t.invalidCredentials || "Invalid username or password", variant: "destructive" });
     }
   };
 
@@ -57,7 +57,7 @@ const Login = () => {
               <Input
                 id="username"
                 type="text"
-                placeholder="Enter your username (default: admin)"
+                placeholder="Enter your username (admin)"
                 value={formData.username}
                 onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
                 required
@@ -70,7 +70,7 @@ const Login = () => {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password (default: Admin)"
+                  placeholder="Enter your password (admin123)"
                   value={formData.password}
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                   required

@@ -26,7 +26,24 @@ class InstitutionSettingsSchema(BaseModel):
     location: Optional[str] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+        
+    @classmethod
+    def from_orm(cls, obj):
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            address=obj.address,
+            phone=obj.phone,
+            email=obj.email,
+            timeZone=obj.time_zone,
+            language=obj.language,
+            darkMode=obj.dark_mode,
+            fontSize=obj.font_size,
+            autoPrint=obj.auto_print,
+            logoDataUrl=obj.logo_data_url,
+            location=obj.location
+        )
 
 @router.get("/settings", response_model=InstitutionSettingsSchema)
 def get_settings(db: Session = Depends(get_db)):
@@ -40,12 +57,12 @@ def get_settings(db: Session = Depends(get_db)):
             address="123 Avenue Mohammed V, Casablanca, Maroc",
             phone="+212 522 123 456",
             email="contact@excellence.ma",
-            timeZone="Africa/Casablanca",
+            time_zone="Africa/Casablanca",
             language="fr",
-            darkMode=False,
-            fontSize="medium",
-            autoPrint=True,
-            logoDataUrl="",
+            dark_mode=False,
+            font_size="medium",
+            auto_print=True,
+            logo_data_url="",
             location="Casablanca, Maroc",
         )
         db.add(default_settings)
@@ -55,7 +72,7 @@ def get_settings(db: Session = Depends(get_db)):
         logger.info("Default settings created and saved.")
     else:
         logger.info("Settings found in the database.")
-    return settings
+    return InstitutionSettingsSchema.from_orm(settings)
 
 @router.put("/settings", response_model=InstitutionSettingsSchema)
 def update_settings(settings_data: InstitutionSettingsSchema, db: Session = Depends(get_db)):
@@ -63,9 +80,21 @@ def update_settings(settings_data: InstitutionSettingsSchema, db: Session = Depe
     if not settings:
         raise HTTPException(status_code=404, detail="Settings not found")
 
+    # Map camelCase frontend fields to snake_case database fields
+    field_mapping = {
+        'timeZone': 'time_zone',
+        'darkMode': 'dark_mode',
+        'fontSize': 'font_size',
+        'autoPrint': 'auto_print',
+        'logoDataUrl': 'logo_data_url'
+    }
+    
     for key, value in settings_data.dict(exclude_unset=True).items():
-        setattr(settings, key, value)
+        # Map camelCase field names to snake_case for database
+        db_field_name = field_mapping.get(key, key)
+        if hasattr(settings, db_field_name):
+            setattr(settings, db_field_name, value)
 
     db.flush()
     db.refresh(settings)
-    return settings
+    return InstitutionSettingsSchema.from_orm(settings)
