@@ -150,14 +150,14 @@ const TranslatedAppSidebar = () => {
         icon: BarChart3,
       },
       {
-        title: currentLang.settings,
-        url: "/settings",
-        icon: Settings,
-      },
-      {
         title: currentLang.subscriptions,
         url: "/subscriptions",
         icon: CreditCard,
+      },
+      {
+        title: currentLang.settings,
+        url: "/settings",
+        icon: Settings,
       }
     ];
   };
