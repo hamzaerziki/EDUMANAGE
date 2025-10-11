@@ -648,6 +648,7 @@ export interface Translation {
   // Filters UI
   advancedFilters?: string;
   clearAll?: string;
+  deleteAll?: string;
   enrollmentDateRange?: string;
   from?: string;
   to?: string;
@@ -662,6 +663,20 @@ export interface Translation {
   applyFilters?: string;
   allCategories?: string;
   selectDate?: string;
+
+  // Level Management
+  levelManagement?: string;
+  existingLevels?: string;
+  initializeDefaults?: string;
+  noLevelsFound?: string;
+  levelName?: string;
+  orderIndex?: string;
+  createLevel?: string;
+  editLevel?: string;
+  addLevel?: string;
+  addGrade?: string;
+  noGradesYet?: string;
+  saving?: string;
 
   // Course management UI
   enrollmentStatus?: string;
@@ -1358,6 +1373,7 @@ export const translations: Record<Language, Translation> = {
     // Filters UI
     advancedFilters: 'Advanced Filters',
     clearAll: 'Clear All',
+    deleteAll: 'Delete All',
     enrollmentDateRange: 'Enrollment Date Range',
     from: 'From',
     to: 'To',
@@ -1372,6 +1388,20 @@ export const translations: Record<Language, Translation> = {
     applyFilters: 'Apply Filters',
     allCategories: 'All Categories',
     selectDate: 'Select date',
+
+    // Level Management
+    levelManagement: 'Level Management',
+    existingLevels: 'Existing Levels',
+    initializeDefaults: 'Initialize Defaults',
+    noLevelsFound: 'No levels found',
+    levelName: 'Level Name',
+    orderIndex: 'Order Index',
+    createLevel: 'Create Level',
+    editLevel: 'Edit Level',
+    addLevel: 'Add Level',
+    addGrade: 'Add Grade',
+    noGradesYet: 'No grades yet',
+    saving: 'Saving...',
     // Course management UI
     enrollmentStatus: 'Enrollment Status',
     courseProgress: 'Course Progress',
@@ -2038,6 +2068,7 @@ export const translations: Record<Language, Translation> = {
     // Filters UI
     advancedFilters: 'Filtres avancés',
     clearAll: 'Tout effacer',
+    deleteAll: 'Supprimer tout',
     enrollmentDateRange: "Période d'inscription",
     from: 'De',
     to: 'À',
@@ -2052,6 +2083,34 @@ export const translations: Record<Language, Translation> = {
     applyFilters: 'Appliquer les filtres',
     allCategories: 'Toutes les catégories',
     selectDate: 'Sélectionner la date',
+
+    // Level Management
+    levelManagement: 'Gestion des Niveaux',
+    existingLevels: 'Niveaux Existants',
+    initializeDefaults: 'Initialiser par Défaut',
+    noLevelsFound: 'Aucun niveau trouvé',
+    levelName: 'Nom du Niveau',
+    orderIndex: 'Index d\'Ordre',
+    createLevel: 'Créer un Niveau',
+    editLevel: 'Modifier le Niveau',
+    addLevel: 'Ajouter un Niveau',
+    addGrade: 'Ajouter une Classe',
+    noGradesYet: 'Aucune classe encore',
+    saving: 'Enregistrement...',
+
+    // Level Management
+    levelManagement: 'Gestion des Niveaux',
+    existingLevels: 'Niveaux Existants',
+    initializeDefaults: 'Initialiser par Défaut',
+    noLevelsFound: 'Aucun niveau trouvé',
+    levelName: 'Nom du Niveau',
+    orderIndex: 'Index d\'Ordre',
+    createLevel: 'Créer un Niveau',
+    editLevel: 'Modifier le Niveau',
+    addLevel: 'Ajouter un Niveau',
+    addGrade: 'Ajouter une Classe',
+    noGradesYet: 'Aucune classe encore',
+    saving: 'Enregistrement...',
     // Course management UI
     enrollmentStatus: "Statut d'inscription",
     courseProgress: 'Progression du cours',

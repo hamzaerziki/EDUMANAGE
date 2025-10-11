@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/hooks/use-toast";
-import { teachersApi, subjectsApi } from "@/lib/api";
+import { teachersApi, subjectsApi, levelsApi } from "@/lib/api";
 
 interface AddGroupModalProps {
   isOpen: boolean;
@@ -31,83 +31,56 @@ export const AddGroupModal = ({ isOpen, onClose, onAdd }: AddGroupModalProps) =>
     schedule: ''
   });
 
-  // Moroccan education levels with grades
-  const moroccanLevels = {
-    "Primaire": {
-      label: "Primaire",
-      grades: [
-        { value: "1ère Année Primaire", label: "1ère Année Primaire" },
-        { value: "2ème Année Primaire", label: "2ème Année Primaire" },
-        { value: "3ème Année Primaire", label: "3ème Année Primaire" },
-        { value: "4ème Année Primaire", label: "4ème Année Primaire" },
-        { value: "5ème Année Primaire", label: "5ème Année Primaire" },
-        { value: "6ème Année Primaire", label: "6ème Année Primaire" }
-      ]
-    },
-    "Collège": {
-      label: "Collège",
-      grades: [
-        { value: "1ère Année Collège", label: "1ère Année Collège" },
-        { value: "2ème Année Collège", label: "2ème Année Collège" },
-        { value: "3ème Année Collège", label: "3ème Année Collège" }
-      ]
-    },
-    "Lycée": {
-      label: "Lycée",
-      grades: [
-        { value: "Tronc Commun Sciences", label: "Tronc Commun Sciences" },
-        { value: "Tronc Commun Lettres", label: "Tronc Commun Lettres" },
-        { value: "1ère Année Bac Sciences Math", label: "1ère Année Bac Sciences Math" },
-        { value: "1ère Année Bac Sciences Exp", label: "1ère Année Bac Sciences Exp" },
-        { value: "1ère Année Bac Lettres", label: "1ère Année Bac Lettres" },
-        { value: "1ère Année Bac Sciences Humaines", label: "1ère Année Bac Sciences Humaines" },
-        { value: "1ère Année Bac Économie", label: "1ère Année Bac Économie" },
-        { value: "2ème Année Bac PC", label: "2ème Année Bac PC" },
-        { value: "2ème Année Bac SVT", label: "2ème Année Bac SVT" },
-        { value: "2ème Année Bac Math", label: "2ème Année Bac Math" },
-        { value: "2ème Année Bac Lettres", label: "2ème Année Bac Lettres" },
-        { value: "2ème Année Bac Sciences Humaines", label: "2ème Année Bac Sciences Humaines" },
-        { value: "2ème Année Bac Économie", label: "2ème Année Bac Économie" }
-      ]
-    }
-  };
-
   const [subjectOptions, setSubjectOptions] = useState<string[]>([]);
-  // Load subjects from backend
-  useEffect(() => {
-    if (!isOpen) return;
-    let alive = true;
-    (async () => {
-      try {
-        const s = await subjectsApi.list();
-        if (!alive) return;
-        const names = Array.isArray(s) ? (s as any[]).map(x => x.name).filter(Boolean) : [];
-        setSubjectOptions(Array.from(new Set(names)).sort((a,b)=>a.localeCompare(b)));
-      } catch {
-        setSubjectOptions([]);
-      }
-    })();
-    return () => { alive = false; };
-  }, [isOpen]);
-
   const [teacherOptions, setTeacherOptions] = useState<string[]>([]);
-
-  // Load teachers from backend when modal opens
+  const [levelOptions, setLevelOptions] = useState<any[]>([]);
+  const [gradeOptions, setGradeOptions] = useState<any[]>([]);
+  
+  // Load levels, subjects, and teachers from backend when modal opens
   useEffect(() => {
     if (!isOpen) return;
     let alive = true;
     (async () => {
       try {
-        const list = await teachersApi.list();
+        const [levels, subjects, teachers] = await Promise.all([
+          levelsApi.list({ active_only: true }).catch(() => []),
+          subjectsApi.list().catch(() => []),
+          teachersApi.list().catch(() => [])
+        ]);
+        
         if (!alive) return;
-        const names = Array.isArray(list) ? (list as any[]).map(t => String(t.full_name || '')).filter(Boolean) : [];
-        setTeacherOptions(Array.from(new Set(names)));
-      } catch {
+        
+        // Set levels
+        setLevelOptions(Array.isArray(levels) ? levels : []);
+        
+        // Set subjects
+        const subjectNames = Array.isArray(subjects) ? (subjects as any[]).map(x => x.name).filter(Boolean) : [];
+        setSubjectOptions(Array.from(new Set(subjectNames)).sort((a,b)=>a.localeCompare(b)));
+        
+        // Set teachers
+        const teacherNames = Array.isArray(teachers) ? (teachers as any[]).map(t => String(t.full_name || '')).filter(Boolean) : [];
+        setTeacherOptions(Array.from(new Set(teacherNames)));
+        
+      } catch (error) {
+        console.error('Failed to load form data:', error);
+        // Fallback to empty arrays
+        setLevelOptions([]);
+        setSubjectOptions([]);
         setTeacherOptions([]);
       }
     })();
     return () => { alive = false; };
   }, [isOpen]);
+  
+  // Update grade options when level changes
+  useEffect(() => {
+    if (formData.level) {
+      const selectedLevel = levelOptions.find(level => level.name === formData.level);
+      setGradeOptions(selectedLevel?.grades || []);
+    } else {
+      setGradeOptions([]);
+    }
+  }, [formData.level, levelOptions]);
 
   const handleTeacherToggle = (teacher: string, checked: boolean) => {
     setFormData(prev => ({
@@ -193,8 +166,8 @@ export const AddGroupModal = ({ isOpen, onClose, onAdd }: AddGroupModalProps) =>
                   <SelectValue placeholder={t.selectLevel} />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(moroccanLevels).map(([key, level]) => (
-                    <SelectItem key={key} value={key}>{level.label}</SelectItem>
+                  {levelOptions.map((level) => (
+                    <SelectItem key={level.id} value={level.name}>{level.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

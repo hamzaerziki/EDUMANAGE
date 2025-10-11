@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { apiClient } from "@/lib/apiClient";
+import { apiRequest } from "@/lib/api";
 import {
   RefreshCw,
   Save,
@@ -25,7 +26,9 @@ import {
   Palette,
   Download,
   Upload,
+  GraduationCap,
 } from "lucide-react";
+import LevelManagementModal from '@/components/modals/LevelManagementModal';
 
 
 const Settings = () => {
@@ -44,6 +47,7 @@ const Settings = () => {
   const [fontSize, setFontSize] = useState(() => {
     return localStorage.getItem('app-font-size') || 'medium';
   });
+  const [levelManagementOpen, setLevelManagementOpen] = useState(false);
 
   // Track changes to institution settings
   useEffect(() => {
@@ -109,9 +113,11 @@ const Settings = () => {
     const fetchSystemInfo = async () => {
       console.log("Fetching system info...");
       try {
-        const response = await apiRequest("/system-info");
-        console.log("System info response:", response);
-        setSystemInfo(response.data);
+        // Comment out API call for now
+        // const response = await apiRequest("/system-info");
+        // console.log("System info response:", response);
+        // setSystemInfo(response.data);
+        console.log("System info fetch disabled");
       } catch (error) {
         console.error("Error fetching system info:", error);
       }
@@ -169,8 +175,9 @@ const Settings = () => {
 
       {/* Settings Tabs */}
       <Tabs defaultValue="general" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general">{t.general}</TabsTrigger>
+          <TabsTrigger value="levels">Levels</TabsTrigger>
           <TabsTrigger value="security">{t.security}</TabsTrigger>
           <TabsTrigger value="appearance">{t.appearance}</TabsTrigger>
         </TabsList>
@@ -292,6 +299,29 @@ const Settings = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="levels" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <GraduationCap className="h-5 w-5" />
+                Education Level Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Manage education levels and grades for your institution. You can create custom levels
+                or initialize with default Moroccan education system levels.
+              </p>
+              <Button
+                onClick={() => setLevelManagementOpen(true)}
+                className="gap-2"
+              >
+                <GraduationCap className="h-4 w-4" />
+                Manage Education Levels
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="security" className="space-y-4">
           <Card>
@@ -446,6 +476,18 @@ const Settings = () => {
         </TabsContent>
       </Tabs>
 
+      {/* Level Management Modal */}
+      <LevelManagementModal
+        open={levelManagementOpen}
+        onOpenChange={setLevelManagementOpen}
+        onLevelsUpdated={() => {
+          toast({
+            title: t.success,
+            description: 'Education levels updated successfully',
+          });
+        }}
+      />
+      
       {/* Save Changes Footer - only show when there are unsaved changes */}
       {hasChanges && (
         <Card className="fixed bottom-6 left-6 right-6 z-50 shadow-lg border-2">

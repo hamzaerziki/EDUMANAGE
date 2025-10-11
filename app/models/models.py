@@ -36,6 +36,8 @@ class Subscription(Base):
     status = Column(String, nullable=False)  # active, cancelled, expired
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
+    current_period_start = Column(DateTime, nullable=True)
+    current_period_end = Column(DateTime, nullable=True)
     auto_renew = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -60,12 +62,12 @@ class SubscriptionInvoice(Base):
 class UsageMetrics(Base):
     __tablename__ = "usage_metrics"
     id = Column(Integer, primary_key=True, index=True)
-    admin_id = Column(Integer, ForeignKey("admins.id"), nullable=False)
-    metric_name = Column(String, nullable=False)  # students_count, teachers_count, courses_count, etc.
-    metric_value = Column(Integer, nullable=False)
-    recorded_at = Column(DateTime, default=datetime.utcnow)
+    subscription_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=False)
+    metric_type = Column(String, nullable=False)  # students, teachers, courses, etc.
+    quantity = Column(Integer, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow)
 
-    admin = relationship("Admin", backref="usage_metrics")
+    subscription = relationship("Subscription", backref="usage_metrics")
 
 class Group(Base):
     __tablename__ = "groups"
@@ -89,8 +91,9 @@ class Student(Base):
     email = Column(String, nullable=True)
     phone = Column(String, nullable=True)
     address = Column(Text, nullable=True)
-    date_of_birth = Column(Date, nullable=True)
+    birth_date = Column(Date, nullable=True)
     gender = Column(String(1), nullable=True)
+    status = Column(String, default="active", nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     group = relationship("Group", back_populates="students")
@@ -310,3 +313,30 @@ class TeacherStatistics(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     teacher = relationship("Teacher", backref="statistics")
+
+class EducationLevel(Base):
+    __tablename__ = "education_levels"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False, unique=True)  # e.g., "Primaire", "Collège", "Lycée", "Custom Level"
+    category = Column(String, nullable=False)  # e.g., "Standard", "Professional", "Technical", "Custom"
+    order_index = Column(Integer, nullable=False, default=0)  # For ordering levels
+    is_active = Column(Boolean, default=True)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    grades = relationship("Grade", back_populates="level", cascade="all, delete-orphan")
+
+class Grade(Base):
+    __tablename__ = "grades"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)  # e.g., "1ère Année", "2ème Année", "Terminale"
+    code = Column(String, nullable=True)  # e.g., "1ap", "2bac-sci"
+    level_id = Column(Integer, ForeignKey("education_levels.id"), nullable=False)
+    order_index = Column(Integer, nullable=False, default=0)  # For ordering grades within a level
+    is_active = Column(Boolean, default=True)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    level = relationship("EducationLevel", back_populates="grades")

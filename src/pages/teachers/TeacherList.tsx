@@ -51,89 +51,89 @@ const TeacherList = () => {
     newThisMonth: 0
   });
 
+  const reloadTeachers = async () => {
+    setLoading(true);
+    try {
+      console.log('🚀 Reloading teachers and stats...');
+      
+      // Load teachers and stats in parallel for better performance
+      const [teachersList, overviewStats] = await Promise.all([
+        teachersApi.list().catch(() => []),
+        teachersApi.getOverviewStats().catch(() => null)
+      ]);
+      
+      // Process teachers data
+      // Fetch stats for each teacher to get studentsCount
+      const adapted = Array.isArray(teachersList)
+        ? await Promise.all((teachersList as any[]).map(async x => {
+            let studentsCount = 0;
+            let experience = '';
+            try {
+              const stats = await teachersApi.stats(x.id);
+              studentsCount = stats.students || 0;
+              experience = stats.experience ? `${stats.experience} yrs` : '';
+            } catch (e) {
+              studentsCount = 0;
+              experience = '';
+            }
+            return {
+              id: x.id,
+              name: x.full_name || '',
+              full_name: x.full_name || '',
+              email: x.email || '',
+              phone: x.phone || '',
+              department: x.speciality || '',
+              speciality: x.speciality || '',
+              subjects: x.speciality ? [x.speciality] : [],
+              status: (x.status || 'active') as 'active' | 'inactive' | 'on_leave',
+              studentsCount,
+              experience,
+              joinDate: (x.created_at ? String(x.created_at).slice(0,10) : ''),
+              created_at: x.created_at,
+              avatar: '',
+            };
+          }))
+        : [];
+      
+      console.log('📚 Reloaded teachers:', adapted);
+      setTeachers(adapted);
+      
+      // Set stats from backend if available, otherwise calculate fallback
+      if (overviewStats && overviewStats.totalTeachers > 0) {
+        console.log('📊 Using backend stats:', overviewStats);
+        setTeacherStats(overviewStats);
+      } else if (adapted.length > 0) {
+        // Fallback calculation
+        const now = new Date();
+        const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        
+        const fallbackStats = {
+          totalTeachers: adapted.length,
+          activeTeachers: adapted.filter((t) => t.status === 'active').length,
+          onLeave: adapted.filter((t) => t.status === 'inactive' || t.status === 'on_leave').length,
+          newThisMonth: adapted.filter((t) => {
+            const createdAt = new Date(t.created_at || t.joinDate);
+            return createdAt >= thisMonth;
+          }).length
+        };
+        
+        console.log('📊 Using fallback stats:', fallbackStats);
+        setTeacherStats(fallbackStats);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error loading teacher data:', error);
+      setTeachers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     let alive = true;
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        console.log('🚀 Loading teachers and stats in parallel...');
-        
-        // Load teachers and stats in parallel for better performance
-        const [teachersList, overviewStats] = await Promise.all([
-          teachersApi.list().catch(() => []),
-          teachersApi.getOverviewStats().catch(() => null)
-        ]);
-        
-        if (!alive) return;
-        
-        // Process teachers data
-        // Fetch stats for each teacher to get studentsCount
-        const adapted = Array.isArray(teachersList)
-          ? await Promise.all((teachersList as any[]).map(async x => {
-              let studentsCount = 0;
-              let experience = '';
-              try {
-                const stats = await teachersApi.stats(x.id);
-                studentsCount = stats.students || 0;
-                experience = stats.experience ? `${stats.experience} yrs` : '';
-              } catch (e) {
-                studentsCount = 0;
-                experience = '';
-              }
-              return {
-                id: x.id,
-                name: x.full_name || '',
-                full_name: x.full_name || '',
-                email: x.email || '',
-                phone: x.phone || '',
-                department: x.speciality || '',
-                speciality: x.speciality || '',
-                subjects: x.speciality ? [x.speciality] : [],
-                status: 'active' as const,
-                studentsCount,
-                experience,
-                joinDate: (x.created_at ? String(x.created_at).slice(0,10) : ''),
-                created_at: x.created_at,
-                avatar: '',
-              };
-            }))
-          : [];
-        
-        console.log('📚 Loaded teachers:', adapted);
-        setTeachers(adapted);
-        
-        // Set stats from backend if available, otherwise calculate fallback
-        if (overviewStats && overviewStats.totalTeachers > 0) {
-          console.log('📊 Using backend stats:', overviewStats);
-          setTeacherStats(overviewStats);
-        } else if (adapted.length > 0) {
-          // Fallback calculation
-          const now = new Date();
-          const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-          
-          const fallbackStats = {
-            totalTeachers: adapted.length,
-            activeTeachers: adapted.filter((t) => t.status === 'active').length,
-            onLeave: adapted.filter((t) => t.status === 'inactive' || t.status === 'on_leave').length,
-            newThisMonth: adapted.filter((t) => {
-              const createdAt = new Date(t.created_at || t.joinDate);
-              return createdAt >= thisMonth;
-            }).length
-          };
-          
-          console.log('📊 Using fallback stats:', fallbackStats);
-          setTeacherStats(fallbackStats);
-        }
-        
-      } catch (error) {
-        console.error('❌ Error loading teacher data:', error);
-        setTeachers([]);
-      } finally {
-        if (alive) setLoading(false);
-      }
-    };
-    
-    loadData();
+    reloadTeachers().then(() => {
+      if (alive) console.log('✨ Initial teacher data load completed');
+    });
     return () => { alive = false; };
   }, []);
 
@@ -205,8 +205,8 @@ const TeacherList = () => {
       }
       setTeachers(prev => prev.filter(t => Number(t.id) !== idNum));
       toast({
-        title: t.teacherDeleted || "Teacher Deleted",
-        description: `${selectedTeacher.name || selectedTeacher.full_name} ${t.hasBeenRemoved || 'has been removed.'}`,
+        title: "Teacher Deleted",
+        description: `${selectedTeacher.name || selectedTeacher.full_name} has been removed.`,
         variant: "destructive",
       });
       activityStore.add({ 
@@ -456,19 +456,7 @@ const TeacherList = () => {
       <AddTeacherModal 
         open={addTeacherOpen} 
         onOpenChange={setAddTeacherOpen}
-        onAdded={(tch) => setTeachers(prev => [...prev, {
-          id: tch.id,
-          name: tch.full_name || '',
-          email: tch.email || '',
-          phone: tch.phone || '',
-          department: tch.speciality || '',
-          subjects: tch.speciality ? [tch.speciality] : [],
-          status: 'active' as const,
-          studentsCount: 0, // Optionally fetch stats here if needed
-          experience: '',
-          joinDate: (tch.created_at ? String(tch.created_at).slice(0,10) : ''),
-          avatar: '',
-        }])}
+        onAdded={reloadTeachers}
       />
       <TeacherProfileModal
         open={profileModalOpen}

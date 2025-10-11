@@ -14,7 +14,7 @@ import { UserCheck, Mail, Phone, GraduationCap, BookOpen } from "lucide-react";
 interface AddTeacherModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdded?: (teacher: any) => void;
+  onAdded?: () => void;
 }
 
 const AddTeacherModal = ({ open, onOpenChange, onAdded }: AddTeacherModalProps) => {
@@ -81,7 +81,7 @@ const AddTeacherModal = ({ open, onOpenChange, onAdded }: AddTeacherModalProps) 
         email: formData.email || null,
         phone: formData.phone || null,
       });
-      onAdded?.(created);
+      onAdded?.();
       toast({
         title: "Teacher Added Successfully",
         description: `${formData.firstName} ${formData.lastName} has been registered.`,

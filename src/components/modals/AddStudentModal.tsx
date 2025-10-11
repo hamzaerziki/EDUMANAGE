@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -145,7 +145,7 @@ const AddStudentModal = ({ open, onOpenChange, onCreated, defaultGroupId }: AddS
     } catch (err: any) {
       let msg = (err?.message || 'Failed to add student').slice(0, 300);
       if (msg.includes('duplicate key value violates unique constraint')) {
-        msg = t.emailExistsError || 'A student with this email already exists.';
+        msg = 'A student with this email already exists.';
       }
       toast({ title: t.error, description: msg, variant: 'destructive' });
     } finally {

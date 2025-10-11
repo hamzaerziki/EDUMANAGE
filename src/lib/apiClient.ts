@@ -1,7 +1,7 @@
 import { ApiResponse } from '@/types/api';
 
 // Import utilities from api.ts
-const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
 const AUTH_TOKEN_KEY = 'authToken';
 const LAST_ACTIVITY_KEY = 'lastActivity';
 const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutes

@@ -120,6 +120,7 @@ from .routes.feedback import router as feedback_router
 from .routes.system import router as system_router
 from .routes.settings import router as settings_router
 from .routes.subscriptions import router as subscriptions_router
+from .routes.levels import router as levels_router
 
 # Include all routes with API version prefix
 app.include_router(auth_router)
@@ -140,3 +141,4 @@ app.include_router(feedback_router)
 app.include_router(system_router)
 app.include_router(settings_router)
 app.include_router(subscriptions_router)
+app.include_router(levels_router)

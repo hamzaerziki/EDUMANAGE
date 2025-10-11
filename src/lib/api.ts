@@ -20,10 +20,11 @@ const CACHE_INVALIDATION_PATTERNS = {
   events: ['/events/', '/stats/'],
   timetable: ['/timetable/', '/teachers/', '/courses/'],
   subjectGrades: ['/grades/', '/subjects/', '/students/', '/stats/'],
-  feedback: ['/feedback/', '/teachers/', '/courses/', '/stats/']
+  feedback: ['/feedback/', '/teachers/', '/courses/', '/stats/'],
+  levels: ['/levels/', '/groups/', '/courses/', '/students/', '/stats/']
 };
 
-const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
 const AUTH_TOKEN_KEY = 'authToken';
 const LAST_ACTIVITY_KEY = 'lastActivity';
 const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutes instead of 5 minutes
@@ -316,14 +317,14 @@ export const studentsApi = {
       group_id: data.group_id ?? null,
       status: data.status ?? 'active',
     };
-    await apiRequest('/students/', { method: 'POST', body: JSON.stringify(payload) });
+    const result = await apiRequest('/students/', { method: 'POST', body: JSON.stringify(payload) });
     invalidateCache('students');
-    return {};
+    return result;
   },
   async update(id: number, data: Partial<{ full_name: string; email?: string | null; phone?: string | null; birth_date?: string | null; gender?: string | null; address?: string | null; group_id?: number | null; status?: string | null }>): Promise<any> {
-    await apiRequest(`/students/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    const result = await apiRequest(`/students/${id}`, { method: 'PUT', body: JSON.stringify(data) });
     invalidateCache('students');
-    return {};
+    return result;
   },
   async remove(id: number): Promise<{ ok: boolean }>{
     await apiRequest(`/students/${id}`, { method: 'DELETE' });
@@ -601,14 +602,14 @@ export const teachersApi = {
     return apiRequest(`/teachers/${id}/debug-stats`);
   },
   async create(data: { full_name: string; speciality?: string | null; email?: string | null; phone?: string | null }): Promise<any> {
-    await apiRequest('/teachers/', { method: 'POST', body: JSON.stringify({
+    const result = await apiRequest('/teachers/', { method: 'POST', body: JSON.stringify({
       full_name: data.full_name,
       speciality: data.speciality ?? null,
       email: data.email ?? null,
       phone: data.phone ?? null,
     }) });
     invalidateCache('teachers');
-    return {};
+    return result;
   },
   async update(id: number, data: Partial<{ full_name: string; speciality?: string | null; email?: string | null; phone?: string | null }>): Promise<any> {
     await apiRequest(`/teachers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
@@ -648,14 +649,14 @@ export const subjectsApi = {
     return apiRequest('/subjects/');
   },
   async create(data: { name: string; category?: string | null; description?: string | null; is_active?: boolean }): Promise<any> {
-    await apiRequest('/subjects/', { method: 'POST', body: JSON.stringify({
+    const result = await apiRequest('/subjects/', { method: 'POST', body: JSON.stringify({
       name: data.name,
       category: data.category ?? null,
       description: data.description ?? null,
       is_active: data.is_active ?? true,
     }) });
     invalidateCache('subjects');
-    return {};
+    return result;
   },
   async update(id: number, data: Partial<{ name: string; category?: string | null; description?: string | null; is_active?: boolean }>): Promise<any> {
     await apiRequest(`/subjects/${id}`, { method: 'PUT', body: JSON.stringify(data) });
@@ -766,6 +767,141 @@ export const feedbackApi = {
   
   async getTeacherStats(teacherId: number): Promise<any> {
     return apiRequest(`/feedback/teacher/${teacherId}/stats`);
+  },
+};
+
+// Education Levels API
+export const levelsApi = {
+  async list(params?: { category?: string; active_only?: boolean }): Promise<Array<{
+    id: number;
+    name: string;
+    category: string;
+    order_index: number;
+    is_active: boolean;
+    description?: string;
+    created_at: string;
+    grades: Array<{
+      id: number;
+      name: string;
+      code?: string;
+      level_id: number;
+      order_index: number;
+      is_active: boolean;
+      description?: string;
+      created_at: string;
+    }>;
+  }>> {
+    const query = new URLSearchParams();
+    if (params?.category) query.set('category', params.category);
+    if (params?.active_only !== undefined) query.set('active_only', String(params.active_only));
+    const queryString = query.toString();
+    return apiRequest(`/levels/${queryString ? '?' + queryString : ''}`);
+  },
+
+  async listCategories(): Promise<string[]> {
+    return apiRequest('/levels/categories');
+  },
+
+  async get(id: number): Promise<{
+    id: number;
+    name: string;
+    category: string;
+    order_index: number;
+    is_active: boolean;
+    description?: string;
+    created_at: string;
+    grades: Array<{
+      id: number;
+      name: string;
+      code?: string;
+      level_id: number;
+      order_index: number;
+      is_active: boolean;
+      description?: string;
+      created_at: string;
+    }>;
+  }> {
+    return apiRequest(`/levels/${id}`);
+  },
+
+  async create(data: {
+    name: string;
+    category: string;
+    order_index?: number;
+    description?: string;
+    grades?: Array<{
+      name: string;
+      code?: string;
+      order_index?: number;
+      description?: string;
+    }>;
+  }): Promise<any> {
+    const result = await apiRequest('/levels/', { 
+      method: 'POST', 
+      body: JSON.stringify(data) 
+    });
+    invalidateCache('levels');
+    return result;
+  },
+
+  async update(id: number, data: {
+    name?: string;
+    category?: string;
+    order_index?: number;
+    description?: string;
+    is_active?: boolean;
+  }): Promise<any> {
+    const result = await apiRequest(`/levels/${id}`, { 
+      method: 'PUT', 
+      body: JSON.stringify(data) 
+    });
+    invalidateCache('levels');
+    return result;
+  },
+
+  async delete(id: number): Promise<any> {
+    const result = await apiRequest(`/levels/${id}`, { method: 'DELETE' });
+    invalidateCache('levels');
+    return result;
+  },
+
+  async addGrade(levelId: number, grade: {
+    name: string;
+    code?: string;
+    order_index?: number;
+    description?: string;
+  }): Promise<any> {
+    const result = await apiRequest(`/levels/${levelId}/grades`, { 
+      method: 'POST', 
+      body: JSON.stringify(grade) 
+    });
+    invalidateCache('levels');
+    return result;
+  },
+
+  async listGrades(levelId: number, activeOnly = true): Promise<Array<{
+    id: number;
+    name: string;
+    code?: string;
+    level_id: number;
+    order_index: number;
+    is_active: boolean;
+    description?: string;
+    created_at: string;
+  }>> {
+    return apiRequest(`/levels/${levelId}/grades?active_only=${activeOnly}`);
+  },
+
+  async deleteGrade(gradeId: number): Promise<any> {
+    const result = await apiRequest(`/levels/grades/${gradeId}`, { method: 'DELETE' });
+    invalidateCache('levels');
+    return result;
+  },
+
+  async initializeDefaults(): Promise<any> {
+    const result = await apiRequest('/levels/initialize-default', { method: 'POST' });
+    invalidateCache('levels');
+    return result;
   },
 };
 

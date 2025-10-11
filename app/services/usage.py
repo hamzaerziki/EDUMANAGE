@@ -1,3 +1,4 @@
+from typing import Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -10,7 +11,7 @@ class UsageService:
     @staticmethod
     async def track_usage(
         db: Session,
-        user_id: int,
+        admin_id: int,
         metric_type: str,
         quantity: int = 1
     ) -> UsageMetrics:
@@ -19,14 +20,14 @@ class UsageService:
         
         Args:
             db: Database session
-            user_id: ID of the user
+            admin_id: ID of the admin
             metric_type: Type of usage metric (e.g., 'students', 'teachers', 'storage')
             quantity: Amount to increment the usage by
         """
         try:
-            # Get active subscription for user
+            # Get active subscription for admin
             subscription = db.query(Subscription).filter(
-                Subscription.user_id == user_id,
+                Subscription.admin_id == admin_id,
                 Subscription.status == 'active'
             ).first()
             
@@ -44,13 +45,20 @@ class UsageService:
             # Get current usage for this metric type
             current_usage = db.query(func.sum(UsageMetrics.quantity)).filter(
                 UsageMetrics.subscription_id == subscription.id,
-                UsageMetrics.metric_type == metric_type,
-                UsageMetrics.timestamp >= subscription.current_period_start,
-                UsageMetrics.timestamp <= subscription.current_period_end
+                UsageMetrics.metric_type == metric_type
             ).scalar() or 0
 
+            # If subscription has period dates, filter by them
+            if subscription.current_period_start is not None and subscription.current_period_end is not None:
+                current_usage = db.query(func.sum(UsageMetrics.quantity)).filter(
+                    UsageMetrics.subscription_id == subscription.id,
+                    UsageMetrics.metric_type == metric_type,
+                    UsageMetrics.timestamp >= subscription.current_period_start,
+                    UsageMetrics.timestamp <= subscription.current_period_end
+                ).scalar() or 0
+
             # Check if this would exceed plan limits
-            limit = getattr(plan, f"{metric_type}_limit", None)
+            limit = getattr(plan, f"max_{metric_type}", None)
             if limit and (current_usage + quantity) > limit:
                 raise HTTPException(
                     status_code=400,
@@ -77,21 +85,21 @@ class UsageService:
     @staticmethod
     async def get_current_usage(
         db: Session,
-        user_id: int,
-        metric_type: str = None
+        admin_id: int,
+        metric_type: Optional[str] = None
     ) -> dict:
         """
-        Get current usage statistics for a user.
+        Get current usage statistics for an admin.
         
         Args:
             db: Database session
-            user_id: ID of the user
+            admin_id: ID of the admin
             metric_type: Optional specific metric type to query
         """
         try:
             # Get active subscription
             subscription = db.query(Subscription).filter(
-                Subscription.user_id == user_id,
+                Subscription.admin_id == admin_id,
                 Subscription.status == 'active'
             ).first()
 
@@ -103,10 +111,15 @@ class UsageService:
                 UsageMetrics.metric_type,
                 func.sum(UsageMetrics.quantity).label('total')
             ).filter(
-                UsageMetrics.subscription_id == subscription.id,
-                UsageMetrics.timestamp >= subscription.current_period_start,
-                UsageMetrics.timestamp <= subscription.current_period_end
+                UsageMetrics.subscription_id == subscription.id
             )
+
+            # If subscription has period dates, filter by them
+            if subscription.current_period_start is not None and subscription.current_period_end is not None:
+                query = query.filter(
+                    UsageMetrics.timestamp >= subscription.current_period_start,
+                    UsageMetrics.timestamp <= subscription.current_period_end
+                )
 
             # Add metric type filter if specified
             if metric_type:
@@ -130,7 +143,7 @@ class UsageService:
             response = {
                 metric: {
                     'current': usage_stats.get(metric, 0),
-                    'limit': getattr(plan, f"{metric}_limit", None)
+                    'limit': getattr(plan, f"max_{metric}", None)
                 }
                 for metric in (usage_stats.keys() if not metric_type else [metric_type])
             }
@@ -143,7 +156,7 @@ class UsageService:
     @staticmethod
     async def check_limit(
         db: Session,
-        user_id: int,
+        admin_id: int,
         metric_type: str,
         quantity: int = 1
     ) -> bool:
@@ -152,12 +165,12 @@ class UsageService:
         
         Args:
             db: Database session
-            user_id: ID of the user
+            admin_id: ID of the admin
             metric_type: Type of usage metric to check
             quantity: Amount to check against limit
         """
         try:
-            usage_stats = await UsageService.get_current_usage(db, user_id, metric_type)
+            usage_stats = await UsageService.get_current_usage(db, admin_id, metric_type)
             metric_stats = usage_stats.get(metric_type, {})
             
             current = metric_stats.get('current', 0)

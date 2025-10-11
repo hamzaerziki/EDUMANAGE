@@ -45,36 +45,37 @@ const GroupList = () => {
   const [groupToDelete, setGroupToDelete] = useState<any | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const [gData, sData] = await Promise.all([
-          groupsApi.list(),
-          studentsApi.list().catch(()=>[]),
-        ]);
-        if (Array.isArray(gData)) {
-          const adapted = gData.map((g:any) => ({
-            id: g.id,
-            name: g.name,
-            level: g.level || '',
-            grade: '',
-            subject: '',
-            teacher: '',
-            schedule: '',
-            classroom: '',
-            capacity: Number(g.capacity) || 0,
-            enrolled: Array.isArray(sData) ? (sData as any[]).filter((s:any)=> Number(s.group_id)===Number(g.id)).length : 0,
-            students: [],
-          }));
-          setGroups(adapted);
-        } else {
-          setGroups([]);
-        }
-      } catch {
+  const reloadGroups = async () => {
+    try {
+      const [gData, sData] = await Promise.all([
+        groupsApi.list(),
+        studentsApi.list().catch(()=>[]),
+      ]);
+      if (Array.isArray(gData)) {
+        const adapted = gData.map((g:any) => ({
+          id: g.id,
+          name: g.name,
+          level: g.level || '',
+          grade: '',
+          subject: '',
+          teacher: '',
+          schedule: '',
+          classroom: '',
+          capacity: Number(g.capacity) || 0,
+          enrolled: Array.isArray(sData) ? (sData as any[]).filter((s:any)=> Number(s.group_id)===Number(g.id)).length : 0,
+          students: [],
+        }));
+        setGroups(adapted);
+      } else {
         setGroups([]);
       }
-    };
-    load();
+    } catch {
+      setGroups([]);
+    }
+  };
+
+  useEffect(() => {
+    reloadGroups();
   }, []);
 
   const getStatusColor = (enrolled: number, capacity: number) => {
@@ -124,20 +125,8 @@ const GroupList = () => {
         year: new Date().getFullYear(),
         capacity: typeof newGroup.capacity === 'number' ? newGroup.capacity : (parseInt(String(newGroup.capacity || 0)) || 0),
       });
-      const adapted = {
-        id: created.id,
-        name: created.name,
-        level: created.level || newGroup.level || '',
-        grade: newGroup.grade || '',
-        subject: newGroup.subject || '',
-        teacher: newGroup.teacher || (Array.isArray(newGroup.teachers) ? newGroup.teachers.join(', ') : ''),
-        schedule: newGroup.schedule || '',
-        classroom: newGroup.classroom || '',
-        capacity: (typeof newGroup.capacity === 'number' ? newGroup.capacity : parseInt(String(newGroup.capacity || 0))) || 0,
-        enrolled: 0,
-        students: [],
-      };
-      setGroups([...groups, adapted]);
+      // Reload the entire list to ensure consistency
+      await reloadGroups();
     } catch {
       // Do not add phantom groups if backend fails
       // You may show a toast here if desired
@@ -165,30 +154,8 @@ const GroupList = () => {
           .map((id:number)=> studentsApi.update(id, { group_id: selectedGroup.id }))
       );
     } catch {}
-    // Refresh enrolled counts from backend
-    try {
-      const [gData, sData] = await Promise.all([
-        groupsApi.list(),
-        studentsApi.list().catch(()=>[]),
-      ]);
-      if (Array.isArray(gData)) {
-        const adapted = gData.map((g:any) => ({
-          id: g.id,
-          name: g.name,
-          level: g.level || '',
-          grade: '',
-          subject: '',
-          teacher: '',
-          schedule: '',
-          classroom: '',
-          capacity: Number(g.capacity) || 0,
-          enrolled: Array.isArray(sData) ? (sData as any[]).filter((s:any)=> Number(s.group_id)===Number(g.id)).length : 0,
-          students: [],
-        }));
-        setGroups(adapted);
-        setSelectedGroup(prev => prev ? { ...prev, enrolled: adapted.find(a=>a.id===prev.id)?.enrolled || 0 } : null);
-      }
-    } catch {}
+    // Refresh the entire list to ensure consistency
+    await reloadGroups();
   };
 
   const openDetailsModal = (group: any) => {

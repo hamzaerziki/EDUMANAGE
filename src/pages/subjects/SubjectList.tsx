@@ -54,8 +54,8 @@ const SubjectList = () => {
   });
 
   const filteredSubjects = subjects.filter(subject =>
-    subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    subject.category.toLowerCase().includes(searchTerm.toLowerCase())
+    (subject.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+    (subject.category || '').toLowerCase().includes((searchTerm || '').toLowerCase())
   );
 
   const handleAddSubject = async () => {
@@ -80,6 +80,7 @@ const SubjectList = () => {
       setNewSubject({ name: "", category: "", description: "" });
       setIsAddModalOpen(false);
       toast({ title: "Success", description: "Subject added successfully" });
+      await loadSubjects(); // Refresh the entire list
     } catch (e: any) {
       const msg = e?.message?.slice(0, 200) || 'Failed to create subject';
       toast({ title: t.error, description: msg, variant: 'destructive' });
@@ -108,6 +109,7 @@ const SubjectList = () => {
       setIsEditModalOpen(false);
       setSelectedSubject(null);
       toast({ title: "Success", description: "Subject updated successfully" });
+      await loadSubjects(); // Refresh the entire list
     } catch (e: any) {
       const msg = e?.message?.slice(0, 200) || 'Failed to update subject';
       toast({ title: t.error, description: msg, variant: 'destructive' });
@@ -120,6 +122,7 @@ const SubjectList = () => {
       await subjectsApi.remove(id);
       setSubjects(prev => prev.filter(s => s.id !== id));
       toast({ title: "Success", description: "Subject deleted successfully" });
+      await loadSubjects(); // Refresh the entire list
     } catch (e: any) {
       const msg = e?.message?.slice(0, 200) || 'Failed to delete subject';
       toast({ title: t.error, description: msg, variant: 'destructive' });

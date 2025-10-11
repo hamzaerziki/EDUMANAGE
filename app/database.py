@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.pool import QueuePool
@@ -22,7 +23,7 @@ def retry_on_exception(retries=3, delay=1):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            last_exception = None
+            last_exception: Exception | None = None
             for attempt in range(retries):
                 try:
                     return func(*args, **kwargs)
@@ -32,8 +33,11 @@ def retry_on_exception(retries=3, delay=1):
                         sleep_time = delay * (2 ** attempt)  # Exponential backoff
                         logger.warning(f"Database operation failed, retrying in {sleep_time}s... ({str(e)})")
                         time.sleep(sleep_time)
-            logger.error(f"All retries failed: {str(last_exception)}")
-            raise last_exception
+            if last_exception:
+                logger.error(f"All retries failed: {str(last_exception)}")
+                raise last_exception
+            else:
+                raise Exception("Unexpected error: no exception captured")
         return wrapper
     return decorator
 
@@ -100,26 +104,26 @@ def get_db() -> Generator:
     start_time = time.time()
     request_id = id(db)  # Unique identifier for this session
     
-    logger.info(f"Starting database session {request_id}")
+    logger.info("Starting database session %s", request_id)
     
     try:
         yield db
         db.commit()  # Auto-commit successful transactions
         duration = time.time() - start_time
-        logger.info(f"Database session {request_id} completed successfully in {duration:.2f}s")
+        logger.info("Database session %s completed successfully in %.2fs", request_id, duration)
     
     except SQLAlchemyError as e:
         db.rollback()
         duration = time.time() - start_time
-        logger.error(f"Database session {request_id} failed after {duration:.2f}s: {str(e)}")
+        logger.error("Database session %s failed after %.2fs: %s", request_id, duration, str(e))
         raise
     
     except Exception as e:
         db.rollback()
         duration = time.time() - start_time
-        logger.error(f"Unexpected error in session {request_id} after {duration:.2f}s: {str(e)}")
+        logger.error("Unexpected error in session %s after %.2fs: %s", request_id, duration, str(e))
         raise
     
     finally:
         db.close()
-        logger.debug(f"Database session {request_id} resources released")
+        logger.debug("Database session %s resources released", request_id)

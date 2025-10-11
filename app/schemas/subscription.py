@@ -82,15 +82,15 @@ class SubscriptionInvoiceRead(SubscriptionInvoiceBase):
     model_config = {"from_attributes": True}
 
 class UsageMetricsBase(BaseModel):
-    admin_id: int
-    metric_name: str
-    metric_value: int
+    subscription_id: int
+    metric_type: str
+    quantity: int
 
 class UsageMetricsCreate(UsageMetricsBase):
     pass
 
 class UsageMetricsRead(UsageMetricsBase):
     id: int
-    recorded_at: datetime
+    timestamp: datetime
 
     model_config = {"from_attributes": True}
