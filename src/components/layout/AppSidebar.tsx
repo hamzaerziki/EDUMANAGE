@@ -9,7 +9,8 @@ import {
   FileText,
   Settings,
   GraduationCap,
-  LogOut
+  LogOut,
+  Layers
 } from "lucide-react";
 import {
   Sidebar,
@@ -37,6 +38,11 @@ const menuItems = [
     title: "Students",
     url: "/students",
     icon: Users,
+  },
+  {
+    title: "Niveaux",
+    url: "/levels",
+    icon: Layers,
   },
   {
     title: "Groups",

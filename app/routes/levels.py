@@ -5,11 +5,40 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from ..database import get_db
-from ..models.models import EducationLevel, Grade
+from ..models.models import EducationLevel, Grade, Category
 
 router = APIRouter(prefix="/levels", tags=["levels"])
 
 # Pydantic models for API
+class CategoryCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    color: Optional[str] = None
+    icon: Optional[str] = None
+    order_index: int = 0
+
+class CategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    color: Optional[str] = None
+    icon: Optional[str] = None
+    order_index: Optional[int] = None
+    is_active: Optional[bool] = None
+
+class CategoryResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+    color: Optional[str]
+    icon: Optional[str]
+    order_index: int
+    is_active: bool
+    created_at: datetime
+    levels_count: Optional[int] = 0
+
+    class Config:
+        from_attributes = True
+
 class GradeCreate(BaseModel):
     name: str
     code: Optional[str] = None
@@ -31,25 +60,35 @@ class GradeResponse(BaseModel):
 
 class EducationLevelCreate(BaseModel):
     name: str
-    category: str
+    category_id: int
     order_index: int = 0
     description: Optional[str] = None
+    min_age: Optional[int] = None
+    max_age: Optional[int] = None
+    prerequisites: Optional[str] = None
     grades: List[GradeCreate] = []
 
 class EducationLevelUpdate(BaseModel):
     name: Optional[str] = None
-    category: Optional[str] = None
+    category_id: Optional[int] = None
     order_index: Optional[int] = None
     description: Optional[str] = None
+    min_age: Optional[int] = None
+    max_age: Optional[int] = None
+    prerequisites: Optional[str] = None
     is_active: Optional[bool] = None
 
 class EducationLevelResponse(BaseModel):
     id: int
     name: str
-    category: str
+    category_id: int
+    category_name: Optional[str] = None
     order_index: int
     is_active: bool
     description: Optional[str]
+    min_age: Optional[int]
+    max_age: Optional[int]
+    prerequisites: Optional[str]
     created_at: datetime
     grades: List[GradeResponse] = []
 
@@ -59,6 +98,7 @@ class EducationLevelResponse(BaseModel):
 # API endpoints
 @router.get("/", response_model=List[EducationLevelResponse])
 def list_levels(
+    category_id: Optional[int] = None,
     category: Optional[str] = None,
     active_only: bool = True,
     db: Session = Depends(get_db)

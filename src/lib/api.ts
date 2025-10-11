@@ -770,36 +770,110 @@ export const feedbackApi = {
   },
 };
 
+// Types for Category and Level management
+export interface Category {
+  id: number;
+  name: string;
+  description?: string;
+  color?: string;
+  icon?: string;
+  order_index: number;
+  is_active: boolean;
+  created_at: string;
+  levels_count?: number;
+}
+
+export interface EducationLevel {
+  id: number;
+  name: string;
+  category_id: number;
+  category_name?: string;
+  order_index: number;
+  is_active: boolean;
+  description?: string;
+  min_age?: number;
+  max_age?: number;
+  prerequisites?: string;
+  created_at: string;
+  grades: Grade[];
+}
+
+export interface Grade {
+  id: number;
+  name: string;
+  code?: string;
+  level_id: number;
+  order_index: number;
+  is_active: boolean;
+  description?: string;
+  created_at: string;
+}
+
+// Categories API
+export const categoriesApi = {
+  async list(activeOnly = true): Promise<Category[]> {
+    const query = new URLSearchParams();
+    if (activeOnly !== undefined) query.set('active_only', String(activeOnly));
+    const queryString = query.toString();
+    return apiRequest(`/levels/categories${queryString ? '?' + queryString : ''}`);
+  },
+
+  async get(id: number): Promise<Category> {
+    return apiRequest(`/levels/categories/${id}`);
+  },
+
+  async create(data: {
+    name: string;
+    description?: string;
+    color?: string;
+    icon?: string;
+    order_index?: number;
+  }): Promise<Category> {
+    const result = await apiRequest('/levels/categories', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    invalidateCache('levels');
+    return result;
+  },
+
+  async update(id: number, data: {
+    name?: string;
+    description?: string;
+    color?: string;
+    icon?: string;
+    order_index?: number;
+    is_active?: boolean;
+  }): Promise<Category> {
+    const result = await apiRequest(`/levels/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+    invalidateCache('levels');
+    return result;
+  },
+
+  async delete(id: number): Promise<{ message: string }> {
+    const result = await apiRequest(`/levels/categories/${id}`, { method: 'DELETE' });
+    invalidateCache('levels');
+    return result;
+  },
+};
+
 // Education Levels API
 export const levelsApi = {
-  async list(params?: { category?: string; active_only?: boolean }): Promise<Array<{
-    id: number;
-    name: string;
-    category: string;
-    order_index: number;
-    is_active: boolean;
-    description?: string;
-    created_at: string;
-    grades: Array<{
-      id: number;
-      name: string;
-      code?: string;
-      level_id: number;
-      order_index: number;
-      is_active: boolean;
-      description?: string;
-      created_at: string;
-    }>;
-  }>> {
+  async list(params?: { category_id?: number; active_only?: boolean }): Promise<EducationLevel[]> {
     const query = new URLSearchParams();
-    if (params?.category) query.set('category', params.category);
+    if (params?.category_id) query.set('category_id', String(params.category_id));
     if (params?.active_only !== undefined) query.set('active_only', String(params.active_only));
     const queryString = query.toString();
     return apiRequest(`/levels/${queryString ? '?' + queryString : ''}`);
   },
 
+  // Legacy method for backward compatibility
   async listCategories(): Promise<string[]> {
-    return apiRequest('/levels/categories');
+    const categories = await categoriesApi.list();
+    return categories.map(cat => cat.name);
   },
 
   async get(id: number): Promise<{

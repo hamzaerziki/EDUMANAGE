@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Users, BookOpen, DollarSign, Calendar, RefreshCw, TrendingUp, BarChart3, FileText, Search, Filter, Download, Plus } from "lucide-react";
 import { apiClient } from "@/lib/apiClient";

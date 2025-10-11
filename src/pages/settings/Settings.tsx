@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Language } from "@/lib/translations";
 import { useSettings } from "@/hooks/useSettings";
@@ -174,7 +175,7 @@ const Settings = () => {
       </div>
 
       {/* Settings Tabs */}
-      <Tabs defaultValue="general" className="space-y-4">
+      <Tabs defaultValue={location.pathname === '/settings/levels' ? 'levels' : 'general'} className="space-y-4">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="general">{t.general}</TabsTrigger>
           <TabsTrigger value="levels">Levels</TabsTrigger>

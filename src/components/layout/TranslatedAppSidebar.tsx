@@ -11,7 +11,8 @@ import {
   GraduationCap,
   CalendarDays,
   Building2,
-  Home
+  Home,
+  Layers
 } from "lucide-react";
 import {
   Sidebar,
@@ -38,6 +39,7 @@ const TranslatedAppSidebar = () => {
       en: {
         dashboard: 'Dashboard',
         students: 'Students',
+        levels: 'Levels',
         teachers: 'Teachers',
         courses: 'Courses',
         groups: 'Groups',
@@ -53,6 +55,7 @@ const TranslatedAppSidebar = () => {
       fr: {
         dashboard: 'Tableau de bord',
         students: 'Étudiants',
+        levels: 'Niveaux',
         teachers: 'Enseignants',
         courses: 'Cours',
         groups: 'Groupes',
@@ -68,6 +71,7 @@ const TranslatedAppSidebar = () => {
       ar: {
         dashboard: 'لوحة التحكم',
         students: 'الطلاب',
+        levels: 'المستويات',
         teachers: 'المعلمون',
         courses: 'الدورات',
         groups: 'المجموعات',
@@ -94,6 +98,11 @@ const TranslatedAppSidebar = () => {
         title: currentLang.students,
         url: "/students",
         icon: Users,
+      },
+      {
+        title: currentLang.levels,
+        url: "/levels",
+        icon: Layers,
       },
       {
         title: currentLang.teachers,
@@ -156,7 +165,7 @@ const TranslatedAppSidebar = () => {
   const menuItems = getMenuItems();
 
   return (
-    <Sidebar collapsible="none" className="w-64 min-w-64 border-r bg-sidebar flex-shrink-0">
+    <Sidebar collapsible="none" className="w-64 min-w-64 border-r bg-sidebar flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
       <SidebarHeader className="border-b p-4">
         <div className="flex items-center gap-3">
           <GraduationCap className="h-5 w-5 text-muted-foreground" />

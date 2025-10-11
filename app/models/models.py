@@ -314,17 +314,37 @@ class TeacherStatistics(Base):
     
     teacher = relationship("Teacher", backref="statistics")
 
-class EducationLevel(Base):
-    __tablename__ = "education_levels"
+class Category(Base):
+    __tablename__ = "categories"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False, unique=True)  # e.g., "Primaire", "Collège", "Lycée", "Custom Level"
-    category = Column(String, nullable=False)  # e.g., "Standard", "Professional", "Technical", "Custom"
-    order_index = Column(Integer, nullable=False, default=0)  # For ordering levels
-    is_active = Column(Boolean, default=True)
+    name = Column(String, nullable=False, unique=True)  # e.g., "Standard", "Professional", "Technical", "Language", "Music", "Sports"
     description = Column(Text, nullable=True)
+    color = Column(String, nullable=True)  # Hex color for UI display
+    icon = Column(String, nullable=True)  # Icon name for UI display
+    order_index = Column(Integer, nullable=False, default=0)  # For ordering categories
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Relationships
+    levels = relationship("EducationLevel", back_populates="category", cascade="all, delete-orphan")
+
+class EducationLevel(Base):
+    __tablename__ = "education_levels"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)  # e.g., "Primaire", "Collège", "Lycée", "Beginner", "Intermediate", "Advanced"
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)  # Foreign key to Category
+    order_index = Column(Integer, nullable=False, default=0)  # For ordering levels within category
+    is_active = Column(Boolean, default=True)
+    description = Column(Text, nullable=True)
+    min_age = Column(Integer, nullable=True)  # Minimum age for this level
+    max_age = Column(Integer, nullable=True)  # Maximum age for this level
+    prerequisites = Column(Text, nullable=True)  # Prerequisites for this level
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    category = relationship("Category", back_populates="levels")
     grades = relationship("Grade", back_populates="level", cascade="all, delete-orphan")
 
 class Grade(Base):
